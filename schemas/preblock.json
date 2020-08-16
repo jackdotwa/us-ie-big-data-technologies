@@ -1,0 +1,279 @@
+{
+  "author": {
+    "name": "John Doe",
+    "student_nr": 12345678,
+    "email": "12345678@sun.ac.za"
+  },
+  "assignment": [
+    {
+      "section": "Big Data Value",
+      "questions": [
+        {
+          "question": "Loosely define the term 'data product' and provide an example?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "Provide a layman's explanation for what differentiates big-data analytics from conventional data analytics?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "There are numerous articles online discussing how IoT is driving data volumes and is inextricably linked to big data. Name an IoT device that you come into contact with and what data it may be sending and receiving?",
+          "answer": "",
+          "total_marks": 1
+        }
+      ]
+    },
+    {
+      "section": "Computing",
+      "questions": [
+        {
+          "question": "What is on-premise computing?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "How has on-demand cloud computing enabled big-data analytics?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What is a _multi-tenancy_, as it relates to cloud computing?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "How could organisations with existing infrastructure leverage _on-demand_ cloud computing?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "Give an example of a cloud managed service and how it's management may be  beneficial (in at least two specific ways, e.g. critical software updates occur automatically with no down time)?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "What is horizontal vs vertical scaling?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "What is a significant source of latency in a distributed system?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "Describe PaaS, Saas, Iaas and provide an example of each?",
+          "answer": "",
+          "total_marks": 4
+        }
+      ]
+    },
+    {
+      "section": "Programming",
+      "questions": [
+        {
+          "question": "What is the shared characteristic of R and Python that allows them to make use of a REPL (read-eval-print loop)?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "Suppose you want to process a large amount of data. In this context, what does it mean if a process is 'I/O bound', and how would you solve/ameliorate this using hardware, or using a language such as python or javascript (or any other language you are more familiar with)?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "What does serialization mean in the context of storing objects or data?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What does it mean when we say that JSON is serializable?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "Define 'embarassingly parallelisable' and provide an example in the related to data analytics?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What paradigm shift allows the Spark's computing engine to be faster than MapReduce?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "How is java code able to run on multiple operating systems?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What is the difference between a virtual machine (e.g. virtualbox) and containers (e.g. docker)? Which one is more light-weight and which is more secure? ",
+          "answer": "",
+          "total_marks": 3
+        }
+      ]
+    },
+    {
+      "section": "Streams",
+      "questions": [
+        {
+          "question": "The instruction (using Unix pipes):\n\ntail -f /var/log/syslog | grep CRITICAL\n\nstreams system logs into a search command. This is an example of partial-order computation -- a concurrency model. Is it embarrassingly parallelisable? Motivate your answer.",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "Although unlikely, suppose that the syslog file grew faster than our ability to search it. What functionality would need to be embedded in the 'pipe' (`|`) operator for us to handle that?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What is meant by unbounded data, and how does it differ from bounded data?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "Stream processing is an inherently time-related activity; describe the difference between 'event time' and 'processing time' within these systems, and provide a brief example in the banking or retail sector?",
+          "answer": "",
+          "total_marks": 3
+        },
+        {
+          "question": "It is possible to process _unbounded_ data in a batch system. If our use-case  does not require near real-time processing, then how would this be done?",
+          "answer": "",
+          "total_marks": 1
+        }
+      ]
+    },
+    {
+      "section": "Data-storage",
+      "questions": [
+        {
+          "question": "Tape drives are still in wide use around the world. Provide three reasons for their continued use?",
+          "answer": "",
+          "total_marks": 3
+        },
+        {
+          "question": "What is the difference between a _kibibyte_ and a _kilobyte_, and which is accurate in terms of storage?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "If a compact disk is 1.2mm thick, and can store 700MiB on a single disk, then how many petibytes (PiB) of data would be stored on a hypothetical column of compact disks stacked between the Earth and the Moon? How many exibytes (EiB)?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "Briefly described what is meant when people refer to SQL and NoSQL databases and provide an example of a type of data typically stored in NoSQL databases?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "Briefly described what is meant when people refer to SQL and NoSQL databases and provide an example of a type of data typically stored in NoSQL databases?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "_Wide-column_ and _key-value_ stores are examples of NoSQL database types. Can you name two more?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": " What makes Avro self-describing, and does Google's ProtoBuf also have this feature? Why is this a useful?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "When comparing random access memory (RAM) to conventional solid state disks and rota disks (normal rotational), how many orders of magnitude faster is _main memory_ or RAM (these are approximate calculations that may ignore the differences between read and write operations)?",
+          "answer": "",
+          "total_marks": 1
+        }
+      ]
+    },
+    {
+      "section": "Processes, People and Principles",
+      "questions": [
+        {
+          "question": "Big-data teams often include, amongst other roles, data engineers and data scientists. Provide a few differentiating responsibilities between these two roles?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "Why is data lineage important in analytics applications?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "The operation of reading data from a database may be said to be _idempotent_. Suppose  we fill our online shopping cart with items, and proceed to checkout. Would we want the  checkout process to be idempotent, and why? ",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "What is CICD?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What is DataOps?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "When is data _immutable_ and why is it it a useful concept in the big-data realm (e.g. consider Hadoop's HDFS filesystem or S3 buckets in AWS)?",
+          "answer": "",
+          "total_marks": 1
+        }
+      ]
+    },
+    {
+      "section": "Tooling",
+      "questions": [
+        {
+          "question": "What is a metastore/metadata server in distributed systems and why is it important (e.g. consider the Hive Metastore in the Hadoop environment, NameNodes in the Hadoop Filesystem, or Metadata Servers in Ceph)?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "What kind of database is Cassandra and what kind of workloads is it suited for (i.t.o read/writes)?",
+          "answer": "",
+          "total_marks": 2
+        },
+        {
+          "question": "What is the H2O platform and what underlying design/operational choice does it share with Spark?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "If I create a feature branch `feature/biglie` off `master` in git, and someone makes a code change to master, how do I get their changes into my branch?",
+          "answer": "",
+          "total_marks": 1
+        }
+      ]
+    },
+    {
+      "section": "Analytics",
+      "questions": [
+        {
+          "question": "How do we know if a machine learning model will perform well 'in the wild'?",
+          "answer": "",
+          "total_marks": 1
+        },
+        {
+          "question": "Suppose you are building a model on a large dataset (>500GiB) and have limited time for discovery work and limited budget. How do you approach feature engineering and model estimation in a reasonable way?",
+          "answer": "",
+          "total_marks": 1
+        }
+      ]
+    },
+    {
+      "section": "Assignment Submission",
+      "questions": [
+        {
+          "question": "Generate an openssh/RSA public-private key pair. Submit the public key on the SUNLearn platform. The username will be your student number. You may then transfer/deliver the completed assignment (e.g. `12345678-preblock.json`) using the `ssh` or `sftp` protocol",
+          "answer": "",
+          "total_marks": 3
+        }
+      ]
+    }
+  ]
+}

@@ -14,7 +14,7 @@
           "total_marks": 2
         },
         {
-          "question": "Provide a layman's explanation for what differentiates big-data analytics from conventional data analytics?",
+          "question": "Provide a layman's explanation for what differentiates big data analytics from conventional data analytics?",
           "answer": "",
           "total_marks": 1
         },
@@ -34,7 +34,7 @@
           "total_marks": 1
         },
         {
-          "question": "How has on-demand cloud computing enabled big-data analytics?",
+          "question": "How has on-demand cloud computing enabled big data analytics?",
           "answer": "",
           "total_marks": 1
         },
@@ -49,7 +49,7 @@
           "total_marks": 1
         },
         {
-          "question": "Give an example of a cloud managed service and how it's management may be  beneficial (in at least two specific ways, e.g. critical software updates occur automatically with no down time)?",
+          "question": "Give an example of a cloud managed service and how its management may be  beneficial (in at least two specific ways, e.g. critical software updates occur automatically with no down time)?",
           "answer": "",
           "total_marks": 2
         },
@@ -94,7 +94,7 @@
           "total_marks": 1
         },
         {
-          "question": "Define 'embarassingly parallelisable' and provide an example in the related to data analytics?",
+          "question": "Define 'embarrassingly parallelisable' and provide an example in the related to data analytics?",
           "answer": "",
           "total_marks": 1
         },
@@ -119,7 +119,7 @@
       "section": "Streams",
       "questions": [
         {
-          "question": "The instruction (using Unix pipes):\n\ntail -f /var/log/syslog | grep CRITICAL\n\nstreams system logs into a search command. This is an example of partial-order computation -- a concurrency model. Is it embarrassingly parallelisable? Motivate your answer.",
+          "question": "The instruction (using Unix pipes) `tail -f /var/log/syslog | grep CRITICAL` streams system logs into a search command. This is an example of partial-order computation -- a concurrency model. Is it embarrassingly parallelisable? Motivate your answer.",
           "answer": "",
           "total_marks": 2
         },
@@ -146,7 +146,7 @@
       ]
     },
     {
-      "section": "Data-storage",
+      "section": "Data Storage",
       "questions": [
         {
           "question": "Tape drives are still in wide use around the world. Provide three reasons for their continued use?",
@@ -159,7 +159,7 @@
           "total_marks": 2
         },
         {
-          "question": "If a compact disk is 1.2mm thick, and can store 700MiB on a single disk, then how many petibytes (PiB) of data would be stored on a hypothetical column of compact disks stacked between the Earth and the Moon? How many exibytes (EiB)?",
+          "question": "If a compact disk is 1.2mm thick, and can store 700MiB on a single disk, then how many pebibytes (PiB) of data would be stored on a hypothetical column of compact disks stacked between the Earth and the Moon? How many exbibytes (EiB)?",
           "answer": "",
           "total_marks": 2
         },
@@ -167,11 +167,6 @@
           "question": "Briefly described what is meant when people refer to SQL and NoSQL databases and provide an example of a type of data typically stored in NoSQL databases?",
           "answer": "",
           "total_marks": 2
-        },
-        {
-          "question": "Briefly described what is meant when people refer to SQL and NoSQL databases and provide an example of a type of data typically stored in NoSQL databases?",
-          "answer": "",
-          "total_marks": 1
         },
         {
           "question": "_Wide-column_ and _key-value_ stores are examples of NoSQL database types. Can you name two more?",
@@ -194,7 +189,7 @@
       "section": "Processes, People and Principles",
       "questions": [
         {
-          "question": "Big-data teams often include, amongst other roles, data engineers and data scientists. Provide a few differentiating responsibilities between these two roles?",
+          "question": "Big data teams often include, amongst other roles, data engineers and data scientists. Provide a few differentiating responsibilities between these two roles?",
           "answer": "",
           "total_marks": 2
         },
@@ -219,7 +214,7 @@
           "total_marks": 1
         },
         {
-          "question": "When is data _immutable_ and why is it it a useful concept in the big-data realm (e.g. consider Hadoop's HDFS filesystem or S3 buckets in AWS)?",
+          "question": "When is data _immutable_ and why is it it a useful concept in the big data realm (e.g. consider Hadoop's HDFS filesystem or S3 buckets in AWS)?",
           "answer": "",
           "total_marks": 1
         }
@@ -266,11 +261,11 @@
       ]
     },
     {
-      "section": "Assignment Submission",
+      "section": "Submission",
       "questions": [
         {
-          "question": "Generate an openssh/RSA public-private key pair. Submit the public key on the SUNLearn platform. The username will be your student number. You may then transfer/deliver the completed assignment (e.g. `12345678-preblock.json`) using the `ssh` or `sftp` protocol",
-          "answer": "",
+          "question": "Generate an openssh/RSA public-private key pair. Submit the public key on the SUNLearn platform. A server address will be provided in due course. You may then transfer/deliver the completed assignment (e.g. `12345678-preblock.json`) using the `ssh` or `sftp` protocol",
+         "answer": "",
           "total_marks": 3
         }
       ]

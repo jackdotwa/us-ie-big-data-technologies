@@ -7,12 +7,13 @@ Install the required packages:
 ```
 pip3 install -r requirements.txt
 ```
+You may need to install the Google Cloud SDK but will be prompted typically if it is missing on your system.
 
 ### Pub/Sub emulator
 The Pub/Sub emulator is initialized and handled by the _bash_ scripts in the `scripts` directory.
 
 #### Initialize
-To initialize the Pub/Sub emulator, run
+To initialize the Pub/Sub emulator, run (MacOS)
 ```
 export JAVA_HOME=/Library/Internet\ Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
 
@@ -33,9 +34,10 @@ To create an input and output topic and subscription, run:
 ```
 
 #### Create a consumer
-To create a standalone Pub/Sub consumer (i.e. subscription) that listens for published messages, run:
+
+To create a standalone Pub/Sub consumer (i.e. subscription) that listens for published messages, run (for example):
 ```
-./custom_consumer.sh
+./custom_consumer.sh input_subscription
 ```
 
 #### Create a publisher

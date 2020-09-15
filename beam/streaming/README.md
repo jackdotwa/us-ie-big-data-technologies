@@ -39,6 +39,7 @@ To create a standalone Pub/Sub consumer (i.e. subscription) that listens for pub
 ```
 ./custom_consumer.sh input_subscription
 ```
+This consumer is handy as it illustrate that messages are read off the queue. Be sure to not leave it running.
 
 #### Create a publisher
 To create a Pub/Sub publisher that publishes messages to a topic, run:
@@ -73,9 +74,9 @@ NUM_RECORDS = int(1e5)
 in `pubsub-emulator/messages.py`. You should be able to run this code in any Unix based system
 (use docker if you need a sandbox). With these steps you will be able to run this code as is (see the `scripts` folder):
 
-1. `./start_pubsub_emulator.sh`: this will occupy a terminal so keep extra one handy (or `.`/start_pubsub_emulator.sh &> /dev/null &` --- run in background and redirect output to null)
+1. `./start_pubsub_emulator.sh`: this will occupy a terminal so keep extra one handy (or `./start_pubsub_emulator.sh &> /dev/null &` --- run in background and redirect output to null)
 2. `./create_topics_subs.sh` 
-3. `./custom_publisher.sh`: this too will occupy a terminal and you do want to see this output while experimenting (see the comments in the code about reducing the volume of messages)
+3. `./custom_publisher.sh`: this too will occupy a terminal and you may want to see this output while experimenting (see the comments in the code about reducing the volume of messages)
 4. `./assignment_run.sh`: you will see messages streaming through your terminal (preferably a second terminal).
 
 If you struggle with the setup, pop us on Slack (as always).

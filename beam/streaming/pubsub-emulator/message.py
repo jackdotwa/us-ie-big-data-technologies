@@ -15,10 +15,10 @@ Faker.seed(1001)  # do not change!
 # For the sake of the assignment, you MUST use
 # NUM_USERS = int(1e3)
 # NUM_RECORDS = int(1e5)
-# but feel free to change these for experimentation
+# but feel free to change these for experimentation (fewer == easier to understand)
 ##
-NUM_USERS = int(1)
-NUM_RECORDS = int(1e1)
+NUM_USERS = int(1e3)
+NUM_RECORDS = int(1e5)
 
 
 def record(user_id, user_name, url):
@@ -30,8 +30,10 @@ def record(user_id, user_name, url):
     return [user_id,
             user_name,
             url,
+            ##
             # if you want to experiment, reduce the range of times randomly selected here
             # for the purposes of the assignment, you MUST USE -30s (as the line is before you change it)
+            ##
             str(fake.date_time_between(start_date='-30s', end_date='now', tzinfo=None)),
             random.randint(0, 256)]
 

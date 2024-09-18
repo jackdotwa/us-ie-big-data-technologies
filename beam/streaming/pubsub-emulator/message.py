@@ -1,15 +1,17 @@
 from hashlib import blake2b, blake2s
 import random
 from faker import Faker
-from datetime import datetime
+import datetime
 
 # sneaky globals
 h = blake2b(key=b'pseudorandom key', digest_size=4)
 # sneaky configs
-random.seed(1001)  # do not change!
+random.seed(1002)  # do not change!
 
+Faker.seed(1002)  # do not change!
 fake = Faker(['en_US'])
-Faker.seed(1001)  # do not change!
+fake.seed_instance(1002)  # do not change!
+
 
 ##
 # For the sake of the assignment, you MUST use
@@ -27,15 +29,15 @@ def record(user_id, user_name, url):
     time
     :return: [user, url, access_time, bytes]
     """
+    now=datetime.datetime.utcnow()
+
     return [user_id,
             user_name,
             url,
-            ##
-            # if you want to experiment, reduce the range of times randomly selected here
-            # for the purposes of the assignment, you MUST USE -30s (as the line is before you change it)
-            ##
-            str(fake.date_time_between(start_date='-30s', end_date='now', tzinfo=None)),
-            random.randint(0, 256)]
+            fake.date_time_between_dates(
+                datetime_start=now-datetime.timedelta(seconds=random.randint(60, 180) if random.randint(0, 256) >= 255 else 0),
+                datetime_end=now, tzinfo=None),
+            random.randint(0, 512)]
 
 
 def users(nr_of):

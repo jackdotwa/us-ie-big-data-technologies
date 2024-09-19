@@ -3,10 +3,13 @@
 
 ## Getting started
 
+  * update Sep 2024: Tested with Python 3.12
+
 Install the required packages:
 ```
 pip3 install -r requirements.txt
 ```
+
 You may need to install the Google Cloud SDK but will be prompted typically if it is missing on your system.
 
 ### Pub/Sub emulator

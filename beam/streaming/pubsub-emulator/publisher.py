@@ -22,7 +22,7 @@ def create_topic(project_id, topic_name):
     # Create a new Pub/Sub topic in the project
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_name)
-    topic = publisher.create_topic(topic_path)
+    topic = publisher.create_topic(request={"name": topic_path})
 
     print("Topic created: {}".format(topic))
 
@@ -32,7 +32,7 @@ def delete_topic(project_id, topic_name):
     # Delete an existing Pub/Sub topic in the project
     publisher = pubsub_v1.PublisherClient()
     topic_path = publisher.topic_path(project_id, topic_name)
-    publisher.delete_topic(topic_path)
+    publisher.delete_topic(request={"topic": topic_path})
 
     print("Topic deleted: {}".format(topic_path))
 

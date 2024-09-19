@@ -26,7 +26,7 @@ def create_subscription(project_id, topic_name, subscription_name):
         project_id, subscription_name
     )
     subscription = subscriber.create_subscription(
-        subscription_path, topic_path
+        name=subscription_path, topic=topic_path
     )
     print("Subscription created: {}".format(subscription))
 
@@ -51,7 +51,8 @@ def delete_subscription(project_id, subscription_name):
     subscription_path = subscriber.subscription_path(
         project_id, subscription_name
     )
-    subscriber.delete_subscription(subscription_path)
+    with subscriber:
+        subscriber.delete_subscription(request={"subscription": subscription_path})
     print("Subscription deleted: {}".format(subscription_path))
 
 

@@ -1,0 +1,30 @@
+version: '3.3'
+
+services:
+  # The Neo4j Database Service
+  neo4j:
+    image: neo4j:4.4
+    user: "1000:1000"
+    hostname: neo4j
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      - NEO4O_AUTH=neo4j/password123
+      - NEO4J_PLUGINS=["apoc"]
+    volumes:
+      # This maps your local './import' folder to '/var/lib/neo4j/import' inside the Neo4j container
+      - ./import:/var/lib/neo4j/import
+      # Optional: You can also persist the database data itself
+      - ./data:/data
+
+  # your code lives in this container
+  app:
+    build: ./app # Tells Docker Compose to build the image from the app/Dockerfile
+    depends_on:
+      - neo4j # Ensures Neo4j starts before the app tries to connect
+    environment:
+      # Pass connection details to the Python script
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=password123

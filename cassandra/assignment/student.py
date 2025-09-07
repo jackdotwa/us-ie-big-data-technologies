@@ -305,7 +305,7 @@ def main():
     log.answer(f'4.4.1: {last_update}')
 
 
-    # Question 4.4.2: Retrieve the single most recent sensor reading for a turbine on a given day. (1)
+    # Question 4.4.2: Retrieve two sensor readings for a turbine on a given day. (1)
     readings = get_readings_for_day(session, test_turbine_id, test_day)
     log.answer(f'4.4.2: {readings}')
 

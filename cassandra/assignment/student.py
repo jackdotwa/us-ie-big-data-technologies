@@ -300,7 +300,7 @@ def main():
 
     log.info("\n--- RUNNING TESTS/ANSWERING QUESTIONS ---")
     
-    # Question 4.4.1 : Retrieve the last updated reading for a given day. (1)
+    # Question 4.4.1 : Retrieve the last updated record for a given day. (1)
     last_update = get_last_update_for_day(session, test_day)
     log.answer(f'4.4.1: {last_update}')
 

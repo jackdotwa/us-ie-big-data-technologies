@@ -49,7 +49,7 @@ logging.basicConfig(level=ANSWER_LEVEL_NUM)
 
 def get_readings_for_day(session, turbine_id, day):
     """
-    Task 1: Retrieves two sensor readings for a specific turbine on a given day.
+    Retrieves two sensor readings for a specific turbine on a given day.
     
     Args:
         session: The Cassandra session object.
@@ -85,7 +85,7 @@ def get_readings_for_day(session, turbine_id, day):
 
 def get_reading_for_turbine(session, turbine_id, day):
     """
-    Task 2: Retrieves the single most recent sensor reading for a turbine on a given day.
+    Retrieves the single most recent sensor reading for a turbine on a given day.
     
     Args:
         session: The Cassandra session object.
@@ -102,7 +102,7 @@ def get_reading_for_turbine(session, turbine_id, day):
 
 def get_number_of_readings_in_range(session, turbine_id, day, start_time, end_time):
     """
-    Task 3: Retrieves number of readings within a start_time and end_time range for a turbine.
+    Retrieves number of readings within a start_time and end_time range for a turbine.
     
     Args:
         session: The Cassandra session object.
@@ -136,14 +136,14 @@ def get_number_of_readings_in_range(session, turbine_id, day, start_time, end_ti
 
 def get_last_update_for_day(session, day):
     """
-    Task 4: Retrieves the last update record for a given day.
+    Retrieves the last update record for a given day.
     
     Args:
         session: The Cassandra session object.
         day (str): The day in 'YYYY-MM-DD' format.
 
     Returns:
-        A single row object representing the last update, or None if not found.
+        A single row object representing the last update
     """
     log.info(f"Get last updated record {day}...")
 

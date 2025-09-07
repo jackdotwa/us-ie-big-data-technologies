@@ -300,12 +300,12 @@ def main():
 
     log.info("\n--- RUNNING TESTS/ANSWERING QUESTIONS ---")
     
-    # Question 4.4.1 : Retrieve the last updated record for a given day. (1)
+    # Question 4.4.1 : Retrieve the last updated reading for a given day. (1)
     last_update = get_last_update_for_day(session, test_day)
     log.answer(f'4.4.1: {last_update}')
 
 
-    # Question 4.4.2: Retrieve the single most recent sensor reading for a turbine on a given day. (1)
+    # Question 4.4.2: Retrieve two sensor readings for a turbine on a given day. (1)
     readings = get_readings_for_day(session, test_turbine_id, test_day)
     log.answer(f'4.4.2: {readings}')
 

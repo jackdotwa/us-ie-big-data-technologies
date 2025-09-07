@@ -1,0 +1,26 @@
+version: '3.3'
+
+services:
+  # The Cassandra Database Service
+  cassandra:
+    image: cassandra:latest
+    container_name: cassandra-db
+    ports:
+      - "9042:9042" # Expose CQL port to the host
+    environment:
+      - CASSANDRA_DC=dc1
+      - CASSANDRA_RACK=rack1
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+
+  # The Python service to load data into Cassandra
+  data-loader:
+    build: ./assignment # Build from the Dockerfile in the data_loader directory
+    depends_on:
+      - cassandra # Ensures Cassandra is ready before this container runs
+    environment:
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_NODES=cassandra
+
+volumes:
+  cassandra_data:

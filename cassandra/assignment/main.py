@@ -54,7 +54,7 @@ def main():
     CASSANDRA_NODES = os.getenv('CASSANDRA_NODES', '127.0.0.1').split(',')
     CQL_FILE_PATH = 'schema.cql'  # Assumes schema.cql is in the same directory
     MAX_RETRIES = 10
-    RETRY_DELAY_SECONDS = 5
+    RETRY_DELAY_SECONDS = 10
 
     cluster = None
     session = None

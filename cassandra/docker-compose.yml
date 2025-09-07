@@ -20,6 +20,7 @@ services:
       - cassandra # Ensures Cassandra is ready before this container runs
     environment:
       - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_NODES=cassandra
 
 volumes:
   cassandra_data:

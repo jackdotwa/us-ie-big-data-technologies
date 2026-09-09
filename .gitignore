@@ -31,6 +31,7 @@ Thumbs.db
 telemetry_dataset.jsonl
 *.log
 evidence.zip
+*.pdf
 
 # IDEs
 .vscode/

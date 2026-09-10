@@ -24,13 +24,13 @@ else
     echo "✅ Docker Compose is available."
 fi
 
-# Check Python and Version >= 3.10
+# Check Python and Version >= 3.11
 if command -v python3 &> /dev/null; then
     PY_CMD="python3"
 elif command -v python &> /dev/null; then
     PY_CMD="python"
 else
-    echo "❌ ERROR: Python is not installed. Please install Python 3.10+ natively on your system."
+    echo "❌ ERROR: Python is not installed. Please install Python 3.11+ natively on your system."
     exit 1
 fi
 
@@ -38,8 +38,8 @@ PY_VER=$($PY_CMD -c 'import sys; print(f"{sys.version_info.major}.{sys.version_i
 PY_MAJOR=$($PY_CMD -c 'import sys; print(sys.version_info.major)')
 PY_MINOR=$($PY_CMD -c 'import sys; print(sys.version_info.minor)')
 
-if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]); then
-    echo "❌ ERROR: Python version must be 3.10 or higher. You have $PY_VER."
+if [ "$PY_MAJOR" -lt 3 ] || ([ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 11 ]); then
+    echo "❌ ERROR: Python version must be 3.11 or higher. You have $PY_VER."
     exit 1
 else
     echo "✅ Python $PY_VER is installed."

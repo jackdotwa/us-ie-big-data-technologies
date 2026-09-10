@@ -12,7 +12,7 @@ Before starting, ensure your system meets the following requirements:
 *   **Software:**
     *   Docker Desktop (or Docker Engine + Docker Compose v2)
     *   Git
-    *   Python 3.10+ (only for the verification script, all other Python execution happens inside containers)
+    *   Python 3.11+ (for the host verification script, stream generator, and vector seeding)
 
 ## 2. Getting Started & Verification
 

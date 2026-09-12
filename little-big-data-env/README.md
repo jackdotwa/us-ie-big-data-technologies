@@ -1,6 +1,6 @@
 # Big Data Technologies: Sandbox Environment
 
-Welcome to the local sandbox environment for the Big Data Technologies Master's course. This repository contains a fully containerized, multi-node big data stack designed to run entirely locally on your laptop using Docker.
+Welcome to the local sandbox environment for Big Data Technologies. This repository contains a fully containerized, multi-node big data stack designed to run entirely locally on your workstation using Docker.
 
 This environment simulates a real-world industrial data architecture without incurring cloud costs or requiring complex local software installations.
 
@@ -72,7 +72,7 @@ docker exec -it spark-master /opt/spark/bin/spark-submit \
 
 **Initialize Qdrant Vector Database:**
 ```bash
-python scripts/init_qdrant_data.py <YOUR_STUDENT_NUMBER>
+python scripts/init_qdrant_data.py <SEED>
 ```
 
 ### C. Accessing Databases

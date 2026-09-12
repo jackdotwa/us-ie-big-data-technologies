@@ -45,11 +45,7 @@ def start_streaming_etl():
     # To run this script locally you would need to append the --packages flag to spark-submit.
     # Example: spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.9 advanced_telemetry_etl.py
     
-    # We create a mock dataframe here for the sake of the reading exercise,
-    # as the pedagogical goal is reading comprehension of the watermark logic,
-    # not configuring distributed package managers.
-    
-    # MOCK STREAM (simulating Kafka input)
+    # Rate-based mock stream simulating Kafka ingestion for standalone pipeline execution
     raw_stream = spark.readStream \
         .format("rate") \
         .option("rowsPerSecond", 10) \

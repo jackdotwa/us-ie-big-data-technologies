@@ -7,7 +7,7 @@ def run_baseline_job():
     print("Initializing Spark Session...")
     
     # In a real environment, memory would be injected via config/pipeline_rules.env
-    # We dynamically load it here so students don't need to restart Docker
+    # Dynamically loaded at runtime to avoid container restarts during tuning.
     env_path = "/opt/spark/work-dir/config/pipeline_rules.env"
     if os.path.exists(env_path):
         with open(env_path, "r") as f:

@@ -168,7 +168,7 @@ def main():
             producer.send(topic_name, value=event)
             events_sent += 1
             
-            # Print to console every 10% of rate or at least 50 events so the student sees activity
+            # Print periodic progress to console based on event throughput
             print_interval = max(50, int(args.rate * 5))
             if events_sent % print_interval == 0:
                 elapsed_seconds = int(time.time() - start_time)

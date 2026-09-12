@@ -1,0 +1,104 @@
+"""
+Deterministic Cassandra sensor readings table initializer.
+
+Loads the `factory_telemetry.sensor_readings` table with 100 telemetry rows
+deterministically generated based on an integer seed.
+"""
+import os
+import sys
+import argparse
+import subprocess
+import random
+
+
+def _import_driver():
+    try:
+        sys.path.insert(0, "/tmp/site-packages")
+        from cassandra.cluster import Cluster
+    except ImportError:
+        print("cassandra-driver not found. Installing to /tmp/site-packages...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "cassandra-driver", "--target", "/tmp/site-packages"])
+        import importlib
+        importlib.invalidate_caches()
+        from cassandra.cluster import Cluster
+    return Cluster
+
+KEYSPACE = "factory_telemetry"
+TABLE = "sensor_readings"
+N_ROWS = 100
+
+
+def generate_cassandra_rows(seed, n=N_ROWS):
+    """Deterministic telemetry row generator.
+
+    Produces sensor readings with deterministic machine_id, product_id,
+    spindle_temperature_c, and status values based on seed.
+    """
+    rng = random.Random(seed)
+    rows = []
+    for _ in range(n):
+        machine_id = f"CNC-MILL-{rng.randint(1, 5):02d}"
+        variant = rng.choice(["L", "M", "H"])
+        product_id = f"{variant}{rng.randint(10000, 99999)}"
+        temp = round(rng.gauss(65.0, 6.0), 2)
+        rows.append({
+            "machine_id": machine_id,
+            "product_id": product_id,
+            "spindle_temperature_c": temp,
+            "status": "ACTIVE",
+        })
+    return rows
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Deterministic Cassandra sensor readings table initializer."
+    )
+    parser.add_argument(
+        "seed",
+        type=int,
+        help="Integer seed for deterministic data generation."
+    )
+    args = parser.parse_args()
+    seed = args.seed
+
+    Cluster = _import_driver()
+    host = os.environ.get("CASSANDRA_HOST", "cassandra")
+    print(f"Connecting to Cassandra at {host}:9042 ...")
+    cluster = Cluster([host], port=9042)
+    session = cluster.connect()
+
+    session.execute(
+        f"CREATE KEYSPACE IF NOT EXISTS {KEYSPACE} "
+        "WITH REPLICATION = {'class':'SimpleStrategy','replication_factor':1};"
+    )
+    session.set_keyspace(KEYSPACE)
+    session.execute(
+        f"CREATE TABLE IF NOT EXISTS {TABLE} ("
+        "machine_id text, event_id uuid, timestamp timestamp, product_id text, "
+        "spindle_temperature_c double, status text, "
+        "PRIMARY KEY (machine_id, event_id));"
+    )
+    # Idempotent: clear any previous seeding so re-runs are clean.
+    session.execute(f"TRUNCATE {TABLE};")
+
+    import uuid
+    from datetime import datetime, timedelta
+    insert = session.prepare(
+        f"INSERT INTO {TABLE} (machine_id, event_id, timestamp, product_id, "
+        "spindle_temperature_c, status) VALUES (?, ?, ?, ?, ?, ?)"
+    )
+    base = datetime(2026, 8, 22, 4, 54, 29)
+    rows = generate_cassandra_rows(seed)
+    for i, r in enumerate(rows):
+        session.execute(insert, (
+            r["machine_id"], uuid.uuid4(), base - timedelta(seconds=i),
+            r["product_id"], r["spindle_temperature_c"], r["status"],
+        ))
+
+    print(f"[+] Seeded {len(rows)} rows into {KEYSPACE}.{TABLE} with seed {seed}.")
+    cluster.shutdown()
+
+
+if __name__ == "__main__":
+    main()

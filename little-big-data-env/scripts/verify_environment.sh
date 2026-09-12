@@ -45,18 +45,44 @@ else
     echo "✅ Python $PY_VER is installed."
 fi
 
-# Get Docker memory limit (rough check)
+# Check Logical CPU Cores
+N_CPUS=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 0)
+if [ "$N_CPUS" -gt 0 ] && [ "$N_CPUS" -lt 4 ]; then
+    echo "⚠️  WARNING: Recommended minimum is 4 logical CPU cores. Detected: $N_CPUS cores."
+elif [ "$N_CPUS" -ge 4 ]; then
+    echo "✅ Logical CPU Cores: $N_CPUS"
+fi
+
+# Check Architecture
+ARCH=$(uname -m)
+echo "✅ System Architecture: $ARCH"
+
+# Get Docker memory limit
 MEM_LIMIT_BYTES=$(docker info -f '{{.MemTotal}}' 2>/dev/null)
 if [ -n "$MEM_LIMIT_BYTES" ]; then
     MEM_LIMIT_GB=$($PY_CMD -c "print(round($MEM_LIMIT_BYTES / 1073741824, 2))")
-    echo "✅ Docker Engine Memory: ~$MEM_LIMIT_GB GB"
+    if [ "$($PY_CMD -c "print(1 if $MEM_LIMIT_BYTES < 6442450944 else 0)")" -eq 1 ]; then
+        echo "⚠️  WARNING: Docker memory is ~$MEM_LIMIT_GB GB. Recommended is 8 GB to avoid container OOM."
+    else
+        echo "✅ Docker Engine Memory: ~$MEM_LIMIT_GB GB"
+    fi
 else
     echo "⚠️  WARNING: Could not determine Docker memory limits."
 fi
 
+# Check available disk space in current directory
+FREE_DISK_KB=$(df -k . 2>/dev/null | awk 'NR==2 {print $4}')
+if [ -n "$FREE_DISK_KB" ]; then
+    FREE_DISK_GB=$($PY_CMD -c "print(round($FREE_DISK_KB / 1048576, 1))")
+    if [ "$FREE_DISK_KB" -lt 10485760 ]; then
+        echo "⚠️  WARNING: Available disk space is ~$FREE_DISK_GB GB. Recommended is 15+ GB for container images."
+    else
+        echo "✅ Available Disk Space: ~$FREE_DISK_GB GB"
+    fi
+fi
+
 echo ""
 echo "=============================================="
-echo "SUCCESS! Local Environment Verification Complete."
-echo "Your local system meets the technical requirements."
+echo "Local Environment Verification Complete."
 echo "You may now proceed to launch the Docker containers."
 echo "=============================================="

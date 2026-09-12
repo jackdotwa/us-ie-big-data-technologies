@@ -53,11 +53,13 @@ def get_default_broker():
 KAFKA_BROKER = os.environ.get("KAFKA_BROKER", get_default_broker())
 TOPIC_NAME = "sensor-raw"
 
-def generate_telemetry_event(tool_wear_tracker):
-    """Generates a single synthetic AI4I-styled JSON telemetry event."""
-    
+def generate_telemetry_event(tool_wear_tracker, rng=None):
+    """Generates a single synthetic AI4I-styled JSON telemetry event using an isolated PRNG."""
+    if rng is None:
+        rng = random
+        
     # Randomly assign a product quality variant
-    variant_roll = random.random()
+    variant_roll = rng.random()
     if variant_roll < 0.20:
         product_type = "H" # High quality
         wear_increment = 5
@@ -68,12 +70,12 @@ def generate_telemetry_event(tool_wear_tracker):
         product_type = "L" # Low quality
         wear_increment = 2
         
-    product_id = f"{product_type}{random.randint(10000, 99999)}"
-    machine_id = f"CNC-MILL-{random.randint(1, 5):02d}"
+    product_id = f"{product_type}{rng.randint(10000, 99999)}"
+    machine_id = f"CNC-MILL-{rng.randint(1, 5):02d}"
     
     # Base physics simulation
-    base_rpm = random.gauss(1500, 100)
-    base_torque = random.gauss(40, 10)
+    base_rpm = rng.gauss(1500, 100)
+    base_torque = rng.gauss(40, 10)
     
     # Track cumulative wear per machine
     current_wear = tool_wear_tracker.get(machine_id, 0)
@@ -83,16 +85,16 @@ def generate_telemetry_event(tool_wear_tracker):
     # Simulate Heat Dissipation Failure (HDF) or friction heat if wear is high
     # Nominal temperature is ~65 C. 
     # If tool wear exceeds 200 mins, friction causes severe temperature spikes > 85 C.
-    temp_celsius = random.gauss(65, 5)
-    if current_wear > 200 and random.random() > 0.7:
-        temp_celsius = random.gauss(88, 3) # Simulate thermal safety limit breach
+    temp_celsius = rng.gauss(65, 5)
+    if current_wear > 200 and rng.random() > 0.7:
+        temp_celsius = rng.gauss(88, 3) # Simulate thermal safety limit breach
         
     # Reset tool wear if it gets too high (simulating a tool replacement)
     if current_wear > 240:
         tool_wear_tracker[machine_id] = 0
 
     event = {
-        "event_id": str(uuid.uuid4()),
+        "event_id": str(uuid.UUID(int=rng.getrandbits(128), version=4)),
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "machine_id": machine_id,
         "product_id": product_id,
@@ -138,9 +140,10 @@ def main():
     args = parser.parse_args()
 
     if args.seed is not None:
-        random.seed(args.seed)
-        print(f"Random seed set to {args.seed} for deterministic output.")
+        rng = random.Random(args.seed)
+        print(f"Random seed set to {args.seed} for deterministic output (isolated PRNG).")
     else:
+        rng = random.Random()
         print("[NOTICE] No --seed specified. Stream output will be non-deterministic.")
 
     topic_name = args.topic
@@ -164,7 +167,7 @@ def main():
     try:
         while True:
             start_tick = time.perf_counter()
-            event = generate_telemetry_event(tool_wear_tracker)
+            event = generate_telemetry_event(tool_wear_tracker, rng=rng)
             producer.send(topic_name, value=event)
             events_sent += 1
             

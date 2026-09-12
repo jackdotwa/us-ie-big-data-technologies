@@ -68,7 +68,14 @@ def main():
     seed = args.seed
 
     QdrantClient, Distance, VectorParams, PointStruct = _import_driver()
-    host = os.environ.get("QDRANT_HOST", "qdrant")
+    host = os.environ.get("QDRANT_HOST")
+    if not host:
+        import socket
+        try:
+            socket.gethostbyname("qdrant")
+            host = "qdrant"
+        except socket.gaierror:
+            host = "localhost"
     port = int(os.environ.get("QDRANT_PORT", "6333"))
     print(f"Connecting to Qdrant at {host}:{port} ...")
     client = QdrantClient(host=host, port=port)

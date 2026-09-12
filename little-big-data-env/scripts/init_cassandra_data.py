@@ -40,7 +40,11 @@ def generate_cassandra_rows(seed, n=N_ROWS):
         machine_id = f"CNC-MILL-{rng.randint(1, 5):02d}"
         variant = rng.choice(["L", "M", "H"])
         product_id = f"{variant}{rng.randint(10000, 99999)}"
-        temp = round(rng.gauss(65.0, 6.0), 2)
+        # Simulate standard operations with ~5% over-temperature safety breaches (> 85 C)
+        if rng.random() < 0.05:
+            temp = round(rng.uniform(86.0, 94.0), 2)
+        else:
+            temp = round(rng.gauss(65.0, 6.0), 2)
         rows.append({
             "machine_id": machine_id,
             "product_id": product_id,
@@ -63,7 +67,14 @@ def main():
     seed = args.seed
 
     Cluster = _import_driver()
-    host = os.environ.get("CASSANDRA_HOST", "cassandra")
+    host = os.environ.get("CASSANDRA_HOST")
+    if not host:
+        import socket
+        try:
+            socket.gethostbyname("cassandra")
+            host = "cassandra"
+        except socket.gaierror:
+            host = "localhost"
     print(f"Connecting to Cassandra at {host}:9042 ...")
     cluster = Cluster([host], port=9042)
     session = cluster.connect()

@@ -72,8 +72,7 @@ docker exec -it spark-master /opt/spark/bin/spark-submit \
 
 **Initialize Qdrant Vector Database:**
 ```bash
-docker exec -it spark-master /opt/spark/bin/spark-submit \
-    /opt/spark/work-dir/scripts/init_qdrant_data.py
+python scripts/init_qdrant_data.py <YOUR_STUDENT_NUMBER>
 ```
 
 ### C. Accessing Databases
@@ -87,7 +86,7 @@ docker exec -it cassandra cqlsh
 **Measuring Kafka Storage Consumption:**
 You can inspect the physical disk footprint of the Kafka topics on the broker.
 ```bash
-docker exec -it kafka du -sh /tmp/kafka-logs
+docker exec kafka du -sk /tmp/kafka-logs
 ```
 
 ## 5. Shutting Down

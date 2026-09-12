@@ -1,8 +1,8 @@
 """
 Deterministic Qdrant vector collection initializer.
 
-Populates the `maintenance_logs` collection (size=384, Cosine metric, 3 points)
-with synthetic log embeddings deterministically seeded by an integer seed.
+Populates the `maintenance_logs` collection with synthetic log embeddings
+deterministically seeded by an integer seed.
 """
 import os
 import sys
@@ -92,7 +92,7 @@ def main():
     client.upsert(collection_name=COLLECTION, points=struct_points)
 
     print("======================================================")
-    print(f"[+] Seeded {len(struct_points)} points into '{COLLECTION}' (size={VECTOR_SIZE}, Cosine) with seed {seed}.")
+    print(f"[+] Successfully seeded points into '{COLLECTION}' with seed {seed}.")
     print(f"Inspect: http://localhost:6333/collections/{COLLECTION}")
     print("======================================================")
 

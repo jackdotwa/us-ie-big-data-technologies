@@ -9,6 +9,7 @@ import sys
 import argparse
 import subprocess
 import random
+import time
 
 def _import_driver():
     import tempfile
@@ -19,7 +20,7 @@ def _import_driver():
         from qdrant_client.http.models import Distance, VectorParams, PointStruct
     except ImportError:
         print(f"qdrant-client not found. Installing to {site_packages}...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "qdrant-client", "--target", site_packages])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "qdrant-client", "--target", site_packages])
         import importlib
         importlib.invalidate_caches()
         from qdrant_client import QdrantClient
@@ -81,8 +82,19 @@ def main():
     port = int(os.environ.get("QDRANT_PORT", "6333"))
     print(f"Connecting to Qdrant at {host}:{port} ...")
     client = QdrantClient(host=host, port=port)
+    max_retries = 15
+    for attempt in range(1, max_retries + 1):
+        try:
+            collections = client.get_collections().collections
+            break
+        except Exception as e:
+            if attempt == max_retries:
+                print(f"[-] Could not connect to Qdrant after {max_retries} attempts.")
+                raise e
+            print(f"[*] Waiting for Qdrant to accept connections (attempt {attempt}/{max_retries})...")
+            time.sleep(2)
 
-    if any(c.name == COLLECTION for c in client.get_collections().collections):
+    if any(c.name == COLLECTION for c in collections):
         client.delete_collection(collection_name=COLLECTION)
     client.create_collection(
         collection_name=COLLECTION,

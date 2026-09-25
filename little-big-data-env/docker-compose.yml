@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   spark-master:
     image: apache/spark:3.5.9-scala2.12-java17-python3-r-ubuntu
@@ -82,6 +80,8 @@ services:
   cassandra:
     image: cassandra:4.1
     container_name: cassandra
+    volumes:
+      - ./queries:/queries
     environment:
       - MAX_HEAP_SIZE=512M
       - HEAP_NEWSIZE=128M

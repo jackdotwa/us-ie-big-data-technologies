@@ -9,6 +9,7 @@ import sys
 import argparse
 import subprocess
 import random
+import time
 
 
 def _import_driver():
@@ -19,7 +20,7 @@ def _import_driver():
         from cassandra.cluster import Cluster
     except ImportError:
         print(f"cassandra-driver not found. Installing to {site_packages}...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "cassandra-driver", "--target", site_packages])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "cassandra-driver", "--target", site_packages])
         import importlib
         importlib.invalidate_caches()
         from cassandra.cluster import Cluster
@@ -79,7 +80,18 @@ def main():
             host = "localhost"
     print(f"Connecting to Cassandra at {host}:9042 ...")
     cluster = Cluster([host], port=9042)
-    session = cluster.connect()
+    session = None
+    max_retries = 20
+    for attempt in range(1, max_retries + 1):
+        try:
+            session = cluster.connect()
+            break
+        except Exception as e:
+            if attempt == max_retries:
+                print(f"[-] Could not connect to Cassandra after {max_retries} attempts.")
+                raise e
+            print(f"[*] Waiting for Cassandra to accept connections (attempt {attempt}/{max_retries})...")
+            time.sleep(3)
 
     session.execute(
         f"CREATE KEYSPACE IF NOT EXISTS {KEYSPACE} "

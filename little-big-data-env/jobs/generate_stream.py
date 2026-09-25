@@ -18,7 +18,7 @@ try:
     from kafka import KafkaProducer
 except ImportError:
     print(f"Kafka-python library not found. Installing to {site_packages}...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "kafka-python", "--target", site_packages])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "kafka-python", "--target", site_packages])
     import importlib
     importlib.invalidate_caches()
     from kafka import KafkaProducer

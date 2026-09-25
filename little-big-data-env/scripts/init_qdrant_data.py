@@ -11,13 +11,15 @@ import subprocess
 import random
 
 def _import_driver():
+    import tempfile
+    site_packages = os.path.join(tempfile.gettempdir(), "bdt-site-packages")
     try:
-        sys.path.insert(0, "/tmp/site-packages")
+        sys.path.insert(0, site_packages)
         from qdrant_client import QdrantClient
         from qdrant_client.http.models import Distance, VectorParams, PointStruct
     except ImportError:
-        print("qdrant-client not found. Installing to /tmp/site-packages...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "qdrant-client", "--target", "/tmp/site-packages"])
+        print(f"qdrant-client not found. Installing to {site_packages}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "qdrant-client", "--target", site_packages])
         import importlib
         importlib.invalidate_caches()
         from qdrant_client import QdrantClient

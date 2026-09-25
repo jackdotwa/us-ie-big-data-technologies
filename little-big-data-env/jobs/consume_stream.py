@@ -10,11 +10,13 @@ import subprocess
 # Automatically install kafka-python if missing.
 # ==============================================================================
 try:
-    sys.path.insert(0, "/tmp/site-packages")
+    import tempfile
+    site_packages = os.path.join(tempfile.gettempdir(), "bdt-site-packages")
+    sys.path.insert(0, site_packages)
     from kafka import KafkaConsumer
 except ImportError:
-    print("Kafka-python library not found. Installing to /tmp/site-packages...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "kafka-python", "--target", "/tmp/site-packages"])
+    print(f"Kafka-python library not found. Installing to {site_packages}...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "kafka-python", "--target", site_packages])
     import importlib
     importlib.invalidate_caches()
     from kafka import KafkaConsumer

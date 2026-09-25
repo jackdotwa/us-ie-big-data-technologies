@@ -114,3 +114,7 @@ services:
       - ./jobs:/opt/spark/work-dir/jobs
     depends_on:
       - kafka
+
+networks:
+  default:
+    name: little-big-data-env_default

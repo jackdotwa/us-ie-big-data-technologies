@@ -12,12 +12,14 @@ import random
 
 
 def _import_driver():
+    import tempfile
+    site_packages = os.path.join(tempfile.gettempdir(), "bdt-site-packages")
     try:
-        sys.path.insert(0, "/tmp/site-packages")
+        sys.path.insert(0, site_packages)
         from cassandra.cluster import Cluster
     except ImportError:
-        print("cassandra-driver not found. Installing to /tmp/site-packages...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "cassandra-driver", "--target", "/tmp/site-packages"])
+        print(f"cassandra-driver not found. Installing to {site_packages}...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "cassandra-driver", "--target", site_packages])
         import importlib
         importlib.invalidate_caches()
         from cassandra.cluster import Cluster

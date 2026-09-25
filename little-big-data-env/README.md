@@ -22,9 +22,9 @@ First, verify that your Docker environment is running and capable of handling th
 2.  Navigate to this directory (`little-big-data-env`).
 3.  Run the cross-platform environment verification tool:
     ```bash
-    python scripts/verify_environment.py
+    python3 scripts/verify_environment.py
     ```
-    *(Alternatively, on Linux/macOS you may run `./scripts/verify_environment.sh`)*
+    *(Windows: use `python` or `python3`; Linux/macOS: `python3`)*
 
 ## 3. Starting the Analytics Stack
 
@@ -72,8 +72,9 @@ docker exec -it spark-master /opt/spark/bin/spark-submit \
 
 **Initialize Qdrant Vector Database:**
 ```bash
-python scripts/init_qdrant_data.py <SEED>
+python3 scripts/init_qdrant_data.py <SEED>
 ```
+*(Windows: `python` or `python3`)*
 
 ### C. Accessing Databases
 
@@ -86,7 +87,7 @@ docker exec -it cassandra cqlsh
 **Measuring Kafka Storage Consumption:**
 You can inspect the physical disk footprint of the Kafka topics on the broker.
 ```bash
-docker exec kafka du -sk /tmp/kafka-logs
+docker exec kafka sh -c "du -sk -c /tmp/kafka-logs/sensor-raw*"
 ```
 
 ## 5. Shutting Down

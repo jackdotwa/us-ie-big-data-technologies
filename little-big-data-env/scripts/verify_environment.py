@@ -71,7 +71,7 @@ def main():
             mem_bytes = int(mem_str)
             mem_gb = round(mem_bytes / (1024**3), 2)
             if mem_bytes < 6 * (1024**3):
-                print(f"⚠️  WARNING: Docker memory allocation is ~{mem_gb} GB. Recommended is 8 GB to avoid container OOM.")
+                print(f"⚠️  WARNING: Docker memory allocation is ~{mem_gb} GB. Recommended is 6+ GB allocated to Docker (with 8 GB minimum physical host RAM) to avoid container OOM.")
             else:
                 print(f"✅ Docker Engine Memory: ~{mem_gb} GB")
         else:
@@ -84,7 +84,7 @@ def main():
         usage = shutil.disk_usage(".")
         free_gb = round(usage.free / (1024**3), 1)
         if free_gb < 10.0:
-            print(f"⚠️  WARNING: Available disk space is ~{free_gb} GB. Recommended is 15+ GB for container images.")
+            print(f"⚠️  WARNING: Available disk space is ~{free_gb} GB. Minimum required is 10 GB (15 GB recommended for container images and volumes).")
         else:
             print(f"✅ Available Disk Space: ~{free_gb} GB")
     except Exception:

@@ -10,21 +10,21 @@ Before starting, ensure your system meets the following requirements:
 *   **Hardware:** Minimum 8 GB RAM, 4 CPU cores, 10 GB free disk space.
 *   **Operating System:** macOS (Intel/Apple Silicon), Windows 10/11 (with WSL2 enabled), or Linux.
 *   **Software:**
-    *   Docker Desktop (or Docker Engine + Docker Compose v2)
-    *   Git
-    *   Python 3.11+ (for the host verification script, stream generator, and vector seeding)
+    *   **Docker:** [Docker Desktop](https://docs.docker.com/get-started/get-docker/) for [Windows](https://docs.docker.com/desktop/setup/install/windows-install/) (with WSL2 backend enabled) and [macOS](https://docs.docker.com/desktop/setup/install/mac-install/) (Apple Silicon / Intel), or [Docker Engine](https://docs.docker.com/engine/install/) with [Compose v2](https://docs.docker.com/compose/install/linux/) for Linux.
+    *   **Git:** Follow the installation instructions at [git-scm.com/book/en/v2/Getting-Started-Installing-Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (version 2.30+).
+    *   **Python 3.10+:** For host scripts, stream generation, and vector seeding ([python.org](https://www.python.org/downloads/)).
 
 ## 2. Getting Started & Verification
 
 First, verify that your Docker environment is running and capable of handling the resource limits.
 
-1.  Open your terminal.
+1.  Open your terminal (PowerShell, Command Prompt, or bash/zsh).
 2.  Navigate to this directory (`little-big-data-env`).
-3.  Run the environment verification script:
+3.  Run the cross-platform environment verification tool:
     ```bash
-    ./scripts/verify_environment.sh
+    python scripts/verify_environment.py
     ```
-    *If you are on Windows, run this from within your WSL2 terminal (e.g., Ubuntu).*
+    *(Alternatively, on Linux/macOS you may run `./scripts/verify_environment.sh`)*
 
 ## 3. Starting the Analytics Stack
 

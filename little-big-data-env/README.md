@@ -10,9 +10,9 @@ Before starting, ensure your system meets the following requirements:
 *   **Hardware:** Minimum 8 GB RAM, 4 CPU cores, 10 GB free disk space.
 *   **Operating System:** macOS (Intel/Apple Silicon), Windows 10/11 (with WSL2 enabled), or Linux.
 *   **Software:**
-    *   Docker Desktop (or Docker Engine + Docker Compose v2)
-    *   Git
-    *   Python 3.11+ (for the host verification script, stream generator, and vector seeding)
+    *   **Docker:** [Docker Desktop](https://docs.docker.com/get-started/get-docker/) for [Windows](https://docs.docker.com/desktop/setup/install/windows-install/) (with WSL2 backend enabled) and [macOS](https://docs.docker.com/desktop/setup/install/mac-install/) (Apple Silicon / Intel), or [Docker Engine](https://docs.docker.com/engine/install/) with [Compose v2](https://docs.docker.com/compose/install/linux/) for Linux.
+    *   **Git:** [git-scm.com](https://git-scm.com/downloads) (version 2.30+).
+    *   **Python 3.11+:** For host scripts, stream generation, and vector seeding ([python.org](https://www.python.org/downloads/)).
 
 ## 2. Getting Started & Verification
 

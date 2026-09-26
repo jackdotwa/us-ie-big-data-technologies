@@ -3,29 +3,18 @@ Deterministic Qdrant vector collection initializer.
 
 Populates the `maintenance_logs` collection with synthetic log embeddings
 deterministically seeded by an integer seed.
+Uses pure Python standard library (urllib.request + json) to interact with Qdrant's
+REST API directly, ensuring zero-dependency execution across ARM64, x86_64,
+virtual environments, and Docker containers without compiled driver overhead.
 """
 import os
 import sys
 import argparse
-import subprocess
 import random
 import time
-
-def _import_driver():
-    import tempfile
-    site_packages = os.path.join(tempfile.gettempdir(), "bdt-site-packages")
-    try:
-        sys.path.insert(0, site_packages)
-        from qdrant_client import QdrantClient
-        from qdrant_client.http.models import Distance, VectorParams, PointStruct
-    except ImportError:
-        print(f"qdrant-client not found. Installing to {site_packages}...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--no-cache-dir", "qdrant-client", "--target", site_packages])
-        import importlib
-        importlib.invalidate_caches()
-        from qdrant_client import QdrantClient
-        from qdrant_client.http.models import Distance, VectorParams, PointStruct
-    return QdrantClient, Distance, VectorParams, PointStruct
+import json
+import urllib.request
+import urllib.error
 
 COLLECTION = "maintenance_logs"
 VECTOR_SIZE = 384
@@ -70,7 +59,6 @@ def main():
     args = parser.parse_args()
     seed = args.seed
 
-    QdrantClient, Distance, VectorParams, PointStruct = _import_driver()
     host = os.environ.get("QDRANT_HOST")
     if not host:
         import socket
@@ -80,13 +68,17 @@ def main():
         except socket.gaierror:
             host = "localhost"
     port = int(os.environ.get("QDRANT_PORT", "6333"))
+    base_url = f"http://{host}:{port}/collections/{COLLECTION}"
     print(f"Connecting to Qdrant at {host}:{port} ...")
-    client = QdrantClient(host=host, port=port)
+
+    # 1. Wait for Qdrant to accept connections
     max_retries = 15
     for attempt in range(1, max_retries + 1):
         try:
-            collections = client.get_collections().collections
-            break
+            req = urllib.request.Request(f"http://{host}:{port}/collections")
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                if resp.status == 200:
+                    break
         except Exception as e:
             if attempt == max_retries:
                 print(f"[-] Could not connect to Qdrant after {max_retries} attempts.")
@@ -94,23 +86,49 @@ def main():
             print(f"[*] Waiting for Qdrant to accept connections (attempt {attempt}/{max_retries})...")
             time.sleep(2)
 
-    if any(c.name == COLLECTION for c in collections):
-        client.delete_collection(collection_name=COLLECTION)
-    client.create_collection(
-        collection_name=COLLECTION,
-        vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.COSINE),
-    )
+    # 2. Delete collection if exists (idempotency)
+    del_req = urllib.request.Request(base_url, method="DELETE")
+    try:
+        with urllib.request.urlopen(del_req, timeout=5):
+            pass
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            raise
 
+    # 3. Create collection with COSINE distance and VECTOR_SIZE
+    create_payload = json.dumps({
+        "vectors": {"size": VECTOR_SIZE, "distance": "Cosine"}
+    }).encode("utf-8")
+    create_req = urllib.request.Request(
+        base_url,
+        data=create_payload,
+        headers={"Content-Type": "application/json"},
+        method="PUT"
+    )
+    with urllib.request.urlopen(create_req, timeout=5) as resp:
+        pass
+
+    # 4. Generate points and upsert
     rng = random.Random(seed)
     meta = generate_qdrant_points(seed)
     struct_points = []
     for p in meta:
         vector = [rng.random() for _ in range(VECTOR_SIZE)]
-        struct_points.append(PointStruct(
-            id=p["id"], vector=vector,
-            payload={"text": p["text"], "severity": p["severity"]},
-        ))
-    client.upsert(collection_name=COLLECTION, points=struct_points)
+        struct_points.append({
+            "id": p["id"],
+            "vector": vector,
+            "payload": {"text": p["text"], "severity": p["severity"]}
+        })
+
+    upsert_payload = json.dumps({"points": struct_points}).encode("utf-8")
+    upsert_req = urllib.request.Request(
+        f"{base_url}/points",
+        data=upsert_payload,
+        headers={"Content-Type": "application/json"},
+        method="PUT"
+    )
+    with urllib.request.urlopen(upsert_req, timeout=5) as resp:
+        pass
 
     print("======================================================")
     print(f"[+] Successfully seeded points into '{COLLECTION}' with seed {seed}.")

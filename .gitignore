@@ -32,6 +32,8 @@ telemetry_dataset.jsonl
 *.log
 evidence.zip
 *.pdf
+*.csv
+sample_customer_ids.txt
 
 # IDEs
 .vscode/

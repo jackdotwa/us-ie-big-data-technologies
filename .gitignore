@@ -34,6 +34,8 @@ evidence.zip
 *.pdf
 *.csv
 sample_customer_ids.txt
+*.duckdb
+*.duckdb.wal
 
 # IDEs
 .vscode/

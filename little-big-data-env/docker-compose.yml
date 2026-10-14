@@ -114,3 +114,34 @@ services:
       - ./jobs:/opt/spark/work-dir/jobs
     depends_on:
       - kafka
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    profiles: ["pb1"]
+    environment:
+      - POSTGRES_DB=bdt_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "${PGPORT:-5432}:5432"
+    volumes:
+      - ../relational-usecases/postgres-sensor-obt/seeds:/seeds:ro
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  mongo:
+    image: mongo:7.0
+    container_name: mongo
+    profiles: ["pb1"]
+    environment:
+      - MONGO_INITDB_DATABASE=quality_assurance
+    ports:
+      - "27017:27017"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+

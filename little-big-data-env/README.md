@@ -110,14 +110,14 @@ docker compose --profile <profile> down
 
 ## 6. Lakehouse Stack (S3, Spark, Iceberg)
 
-The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its memory limits add up to 8 GiB, so start it on its own, not alongside `analytics`. Run everything from the repository root.
+The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its memory limits add up to 8 GiB, so start it on its own, not alongside `analytics`. Docker Desktop must be allowed at least 10 GB of memory, or the containers cannot use the memory they are allowed: on macOS under Settings → Resources; on Windows with the WSL 2 backend through `memory=10GB` in `%UserProfile%\.wslconfig` (then `wsl --shutdown`). Run everything from the repository root.
 
 | Service | Purpose | Memory limit |
 | --- | --- | --- |
 | `seaweedfs` | S3-compatible object store (SeaweedFS), buckets `landing`, `warehouse`, `output`, `logs` | 1 GiB |
 | `spark-master` | Spark standalone master (shared with the other profiles), UI on http://localhost:8080 | 512 MiB |
 | `lakehouse-worker-1`, `lakehouse-worker-2` | 2 cores and 2 GiB each: one executor per worker | 2.5 GiB each |
-| `lakehouse-driver` | Where you run `spark-submit`, with your repository (`REPO_DIR`) mounted at `/workspace`; application UI on http://localhost:4041 | 1.25 GiB |
+| `lakehouse-driver` | Where you run `spark-submit`, with your repository (`REPO_DIR`) mounted at `/workspace`; application UI on http://localhost:4041; JupyterLab on http://localhost:8888 when started | 1.5 GiB |
 
 **Where Iceberg sits.** Iceberg is not a service: it is a table format, used through a library inside Spark. The Iceberg Spark runtime jar gives Spark SQL a catalog called `lake`, whose tables live as Parquet data files plus Iceberg metadata (snapshots and manifests) in the `warehouse` bucket. Raw files stay in `landing`; your jobs turn them into tables in `lake`; results go to `output`.
 
@@ -138,7 +138,13 @@ The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its
    docker compose -f little-big-data-env/docker-compose.yml exec lakehouse-driver spark-submit /opt/lakehouse/jobs/lakehouse_smoke.py
    ```
 
-**Fixed configuration.** `config/lakehouse/spark-defaults.conf` sets memory, cores, the S3 endpoint, event logging to `s3a://logs/spark-events/` and the Iceberg catalog `lake` (warehouse `s3a://warehouse/iceberg`). Do not override any of it in your code: every run's event log records the configuration it ran with. Iceberg's vectorised reader is switched off because it crashes the JVM on ARM machines.
+**Notebooks (JupyterLab on the edge node).** The driver can also serve JupyterLab, the way a notebook server sits on the edge node of a shared cluster:
+```bash
+./little-big-data-env/scripts/start_jupyterlab.sh
+```
+It installs JupyterLab in `lakehouse-driver` on first use (and again after the driver is recreated) and serves it on http://localhost:8888, opened in your repository. In a notebook, `SparkSession.builder.getOrCreate()` runs on the same workers, buckets and fixed configuration as `spark-submit`. VS Code can connect to the same server as a remote Jupyter kernel. A notebook's Spark session is an application of its own and holds all the cluster's cores while it is open (see http://localhost:8080): call `spark.stop()`, or shut down the kernel, before you run `spark-submit`, which otherwise waits with "Initial job has not accepted any resources".
+
+**Fixed configuration.** `config/lakehouse/spark-defaults.conf` sets memory, cores, the S3 endpoint, event logging to `s3a://logs/spark-events/` and the Iceberg catalog `lake` (warehouse `s3a://warehouse/iceberg`). Do not override any of it in your code: every run's event log records the configuration it ran with. Iceberg's vectorised reader is switched off because it crashes the JVM on ARM machines. `config/lakehouse/log4j2.properties` sets the driver's logging to WARN and hides four harmless warnings this stack prints on every run; it changes nothing about how a job runs. For more detail while debugging, call `spark.sparkContext.setLogLevel("INFO")` in your code; the log level is not part of the fixed configuration.
 
 **S3 credentials** (inside the stack): endpoint `http://seaweedfs:8333`, access key `bdtadmin`, secret `bdtadmin`. From your host the endpoint is `http://localhost:8333`.
 

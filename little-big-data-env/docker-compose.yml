@@ -8,7 +8,7 @@
 x-lakehouse-spark: &lakehouse-spark
   image: apache/spark:3.5.9-scala2.12-java17-python3-r-ubuntu
   profiles: ["lakehouse"]
-  restart: unless-stopped
+  restart: on-failure   # back after a crash (e.g. out of memory), not at every Docker start
   volumes:
     - ./config/lakehouse/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
     - ./jars/lakehouse:/opt/spark/lakehouse-jars:ro
@@ -144,7 +144,7 @@ services:
     image: chrislusf/seaweedfs:4.47
     container_name: seaweedfs
     profiles: ["lakehouse"]
-    restart: unless-stopped
+    restart: on-failure   # back after a crash (e.g. out of memory), not at every Docker start
     command: >
       server -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0
       -master.volumeSizeLimitMB=512 -volume.max=100
@@ -208,6 +208,7 @@ services:
     container_name: lakehouse-worker-2
 
   # Where you run spark-submit, with your repository (REPO_DIR) mounted at /workspace.
+  # Also the edge node: scripts/start_jupyterlab.sh serves JupyterLab from here on port 8888.
   lakehouse-driver:
     <<: *lakehouse-spark
     container_name: lakehouse-driver
@@ -217,21 +218,26 @@ services:
     environment:
       - PATH=/opt/spark/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
       - PYTHONUNBUFFERED=1
+      # The image's own PySpark, so a notebook kernel can import it (spark-submit adds it itself).
+      - PYTHONPATH=/opt/spark/python:/opt/spark/python/lib/py4j-0.10.9.7-src.zip
     volumes:
       - ./config/lakehouse/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - ./config/lakehouse/log4j2.properties:/opt/spark/conf/log4j2.properties:ro
       - ./jars/lakehouse:/opt/spark/lakehouse-jars:ro
       # The environment's own jobs (the smoke test), wherever REPO_DIR points.
       - ./jobs:/opt/lakehouse/jobs:ro
       - ${REPO_DIR:-..}:/workspace
     ports:
       - "127.0.0.1:4041:4040"
+      - "127.0.0.1:8888:8888"
     depends_on:
       - spark-master
       - seaweedfs-init
+    # 1.5 GiB, as the auditor's runner: room for the 1 GiB driver heap, PySpark and a notebook.
     deploy:
       resources:
         limits:
-          memory: 1280M
+          memory: 1536M
 
   postgres:
     image: postgres:16-alpine

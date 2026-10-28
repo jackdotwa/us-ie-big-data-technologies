@@ -4,7 +4,8 @@
         spark-submit /opt/lakehouse/jobs/lakehouse_smoke.py
 
 Reads raw sales CSV from the landing bucket, writes and reads back an Iceberg table in the
-warehouse bucket, writes Parquet to the output bucket, and leaves an event log in the logs bucket.
+warehouse bucket and Parquet in the output bucket, then deletes both again: it leaves only its
+event log in the logs bucket.
 It uses the fixed configuration only: nothing here sets memory, cores or cluster options.
 """
 
@@ -43,6 +44,14 @@ def main():
     daily.write.mode("overwrite").parquet("s3a://output/smoke/daily_lines")
     print(f"[+] wrote Parquet to s3a://output/smoke/daily_lines "
           f"({spark.read.parquet('s3a://output/smoke/daily_lines').count():,} rows)")
+
+    # Leave the buckets as they were: only the event log stays.
+    # The catalog is file-based: a namespace is a folder, so deleting the folder drops it.
+    spark.sql("DROP TABLE lake.smoke.daily_lines PURGE")
+    Path, conf = sc._jvm.org.apache.hadoop.fs.Path, sc._jsc.hadoopConfiguration()
+    for folder in ("s3a://warehouse/iceberg/smoke", "s3a://output/smoke"):
+        Path(folder).getFileSystem(conf).delete(Path(folder), True)
+    print("[+] removed lake.smoke and s3a://output/smoke")
 
     app = sc.applicationId
     spark.stop()

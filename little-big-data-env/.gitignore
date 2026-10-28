@@ -1,2 +1,7 @@
-jars/
+# Jars are downloaded by scripts/fetch_iceberg_s3a_jars.sh; the folder itself ships, so Docker
+# never creates it (as root) when the stack starts before the jars are fetched.
+jars/*
+!jars/lakehouse/
+jars/lakehouse/*
+!jars/lakehouse/.gitkeep
 .retail-load/

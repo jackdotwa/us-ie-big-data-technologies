@@ -7,7 +7,7 @@ This environment simulates a real-world industrial data architecture without inc
 ## 1. Prerequisites
 
 Before starting, ensure your system meets the following requirements:
-*   **Hardware:** Minimum 8 GB RAM, 4 CPU cores, 10 GB free disk space.
+*   **Hardware:** Minimum 8 GB RAM (16 GB recommended), 4 CPU cores, 10 GB free disk space. The lakehouse profile (Section 6) needs 10 GB of memory allocated to Docker.
 *   **Operating System:** macOS (Intel/Apple Silicon), Windows 10/11 (with WSL2 enabled), or Linux.
 *   **Software:**
     *   **Docker:** [Docker Desktop](https://docs.docker.com/get-started/get-docker/) for [Windows](https://docs.docker.com/desktop/setup/install/windows-install/) (with WSL2 backend enabled) and [macOS](https://docs.docker.com/desktop/setup/install/mac-install/) (Apple Silicon / Intel), or [Docker Engine](https://docs.docker.com/engine/install/) with [Compose v2](https://docs.docker.com/compose/install/linux/) for Linux.
@@ -110,7 +110,7 @@ docker compose --profile <profile> down
 
 ## 6. Lakehouse Stack (S3, Spark, Iceberg)
 
-The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its memory limits add up to 8 GiB, so start it on its own, not alongside `analytics`. Docker Desktop must be allowed at least 10 GB of memory, or the containers cannot use the memory they are allowed: on macOS under Settings → Resources; on Windows with the WSL 2 backend through `memory=10GB` in `%UserProfile%\.wslconfig` (then `wsl --shutdown`). Run everything from the repository root.
+The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its memory limits add up to 8 GiB, so start it on its own, not alongside `analytics`. Docker Desktop must be allowed at least 10 GB of memory, or the containers cannot use the memory they are allowed: on macOS under Settings → Resources; on Windows with the WSL 2 backend through `memory=10GB` in `%UserProfile%\.wslconfig` (then `wsl --shutdown`). On Linux, Docker uses the machine's memory directly: there is nothing to set, but about 10 GB must be free. Run these commands from the repository root (the folder that contains `little-big-data-env/`), not from inside `little-big-data-env/` as in Section 2.
 
 | Service | Purpose | Memory limit |
 | --- | --- | --- |
@@ -125,15 +125,21 @@ The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its
    ```bash
    ./little-big-data-env/scripts/fetch_iceberg_s3a_jars.sh
    ```
-2. Start the stack, with your own repository mounted in the driver:
+2. Start the stack, with your own repository mounted in the driver. `REPO_DIR` is the absolute path of your local clone of your own course repository; the driver mounts it at `/workspace`, so a path such as `pb2/run_week.py` is resolved inside it:
    ```bash
-   REPO_DIR=/path/to/your/repository docker compose -f little-big-data-env/docker-compose.yml --profile lakehouse up -d
+   REPO_DIR=/path/to/your/repository \
+     docker compose -f little-big-data-env/docker-compose.yml --profile lakehouse up -d
    ```
+   The driver runs as root. On Linux (including WSL 2), files it creates in your repository, such as notebooks, `__pycache__` folders or anything your code writes there, therefore belong to root. If you cannot edit or delete one, take them back (no `sudo` needed; run it from the repository root while the stack is up):
+   ```bash
+   docker compose -f little-big-data-env/docker-compose.yml exec lakehouse-driver chown -R "$(id -u):$(id -g)" /workspace
+   ```
+   macOS is not affected.
 3. Load a retail data tarball into the `landing` bucket:
    ```bash
    ./little-big-data-env/scripts/load_retail_to_landing.sh /path/to/<tarball>.tar.gz
    ```
-4. Check the stack end to end (reads landing, writes Iceberg and Parquet, leaves an event log):
+4. Check the stack end to end, in about 3 minutes (reads landing, writes an Iceberg table and Parquet, reads them back and deletes them again, and leaves an event log):
    ```bash
    docker compose -f little-big-data-env/docker-compose.yml exec lakehouse-driver spark-submit /opt/lakehouse/jobs/lakehouse_smoke.py
    ```

@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "bdtadmin",
+      "credentials": [{"accessKey": "bdtadmin", "secretKey": "bdtadmin"}],
+      "actions": ["Admin", "Read", "List", "Tagging", "Write"]
+    }
+  ]
+}

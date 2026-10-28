@@ -1,7 +1,21 @@
-version: "3.8"
+# Profiles: nothing starts without one. Pick what the work needs, for example
+#   docker compose --profile analytics up -d    # Spark, Kafka, Kafka UI, Cassandra, Qdrant (the course's lab stack)
+#   docker compose --profile streaming up -d    # Spark, Kafka, Kafka UI and the stream consumer
+#   docker compose --profile spark up -d        # Spark master and worker only
+#   docker compose --profile lakehouse up -d    # S3 object store, Spark with two workers, Iceberg (8 GiB in all)
+# Naming a service starts it whatever its profile, e.g. `docker compose up -d postgres mongo`.
+
+x-lakehouse-spark: &lakehouse-spark
+  image: apache/spark:3.5.9-scala2.12-java17-python3-r-ubuntu
+  profiles: ["lakehouse"]
+  restart: unless-stopped
+  volumes:
+    - ./config/lakehouse/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+    - ./jars/lakehouse:/opt/spark/lakehouse-jars:ro
 
 services:
   spark-master:
+    profiles: ["analytics", "streaming", "spark", "lakehouse"]
     image: apache/spark:3.5.9-scala2.12-java17-python3-r-ubuntu
     container_name: spark-master
     cpuset: "0-1"
@@ -22,6 +36,7 @@ services:
           memory: 512M
 
   spark-worker:
+    profiles: ["analytics", "streaming", "spark"]
     image: apache/spark:3.5.9-scala2.12-java17-python3-r-ubuntu
     container_name: spark-worker
     cpuset: "0-1"
@@ -40,6 +55,7 @@ services:
           memory: 1G
 
   kafka:
+    profiles: ["analytics", "streaming"]
     image: apache/kafka:3.7.0
     container_name: kafka
     environment:
@@ -65,6 +81,7 @@ services:
           memory: 1G
 
   kafka-ui:
+    profiles: ["analytics", "streaming"]
     image: provectuslabs/kafka-ui:latest
     container_name: kafka-ui
     environment:
@@ -80,6 +97,7 @@ services:
           memory: 256M
 
   cassandra:
+    profiles: ["analytics"]
     image: cassandra:4.1
     container_name: cassandra
     environment:
@@ -93,6 +111,7 @@ services:
           memory: 1G
 
   qdrant:
+    profiles: ["analytics"]
     image: qdrant/qdrant:latest
     container_name: qdrant
     ports:
@@ -104,6 +123,7 @@ services:
           memory: 512M
 
   ingest-consumer:
+    profiles: ["analytics", "streaming"]
     image: apache/spark:3.5.9-scala2.12-java17-python3-r-ubuntu
     container_name: ingest-consumer
     command: python3 /opt/spark/work-dir/jobs/consume_stream.py
@@ -114,6 +134,102 @@ services:
       - ./jobs:/opt/spark/work-dir/jobs
     depends_on:
       - kafka
+
+  # ---- lakehouse: S3 object store (SeaweedFS) + Spark with two workers + a driver, 8 GiB in all ----
+  # The Spark configuration in config/lakehouse/spark-defaults.conf is fixed; every run's event
+  # log records the configuration it ran with.
+
+  # S3-compatible object store (SeaweedFS: master, volume, filer and S3 gateway in one process).
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.47
+    container_name: seaweedfs
+    profiles: ["lakehouse"]
+    restart: unless-stopped
+    command: >
+      server -dir=/data -ip=seaweedfs -ip.bind=0.0.0.0
+      -master.volumeSizeLimitMB=512 -volume.max=100
+      -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json
+    volumes:
+      - seaweedfs-data:/data
+      - ./config/lakehouse/s3.json:/etc/seaweedfs/s3.json:ro
+    ports:
+      - "8333:8333"
+      - "9333:9333"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9333/cluster/healthz"]
+      interval: 5s
+      retries: 30
+    # 1 GiB: at 768 MiB it was OOM-killed streaming an 88 MB event log to several readers at once.
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+
+  # Creates the four buckets once the S3 gateway answers, then exits.
+  seaweedfs-init:
+    image: rclone/rclone:1.75.2
+    container_name: seaweedfs-init
+    profiles: ["lakehouse"]
+    depends_on:
+      seaweedfs:
+        condition: service_healthy
+    environment:
+      - RCLONE_CONFIG_S3_TYPE=s3
+      - RCLONE_CONFIG_S3_PROVIDER=SeaweedFS
+      - RCLONE_CONFIG_S3_ENDPOINT=http://seaweedfs:8333
+      - RCLONE_CONFIG_S3_ACCESS_KEY_ID=bdtadmin
+      - RCLONE_CONFIG_S3_SECRET_ACCESS_KEY=bdtadmin
+    entrypoint: >
+      /bin/sh -c "
+      until rclone lsd s3: >/dev/null 2>&1; do sleep 2; done &&
+      for b in landing warehouse output logs; do rclone mkdir s3:$$b; done &&
+      rclone touch s3:logs/spark-events/.keep && rclone lsd s3:"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # Two workers, 2 cores and 2 GiB each, registered with the shared spark-master.
+  lakehouse-worker-1: &lakehouse-worker
+    <<: *lakehouse-spark
+    container_name: lakehouse-worker-1
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker --cores 2 --memory 2g spark://spark-master:7077
+    environment:
+      - SPARK_DAEMON_MEMORY=256m
+    depends_on:
+      - spark-master
+    deploy:
+      resources:
+        limits:
+          memory: 2560M
+
+  lakehouse-worker-2:
+    <<: *lakehouse-worker
+    container_name: lakehouse-worker-2
+
+  # Where you run spark-submit, with your repository (REPO_DIR) mounted at /workspace.
+  lakehouse-driver:
+    <<: *lakehouse-spark
+    container_name: lakehouse-driver
+    user: root
+    working_dir: /workspace
+    command: sleep infinity
+    environment:
+      - PATH=/opt/spark/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./config/lakehouse/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - ./jars/lakehouse:/opt/spark/lakehouse-jars:ro
+      - ${REPO_DIR:-..}:/workspace
+    ports:
+      - "4041:4040"
+    depends_on:
+      - spark-master
+      - seaweedfs-init
+    deploy:
+      resources:
+        limits:
+          memory: 1280M
 
   postgres:
     image: postgres:16-alpine
@@ -145,3 +261,5 @@ services:
         limits:
           memory: 512M
 
+volumes:
+  seaweedfs-data:

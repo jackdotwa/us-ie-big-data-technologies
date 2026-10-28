@@ -220,6 +220,8 @@ services:
     volumes:
       - ./config/lakehouse/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
       - ./jars/lakehouse:/opt/spark/lakehouse-jars:ro
+      # The environment's own jobs (the smoke test), wherever REPO_DIR points.
+      - ./jobs:/opt/lakehouse/jobs:ro
       - ${REPO_DIR:-..}:/workspace
     ports:
       - "4041:4040"

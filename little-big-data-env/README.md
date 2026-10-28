@@ -135,7 +135,7 @@ The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its
    ```
 4. Check the stack end to end (reads landing, writes Iceberg and Parquet, leaves an event log):
    ```bash
-   docker compose -f little-big-data-env/docker-compose.yml exec lakehouse-driver spark-submit little-big-data-env/jobs/lakehouse_smoke.py
+   docker compose -f little-big-data-env/docker-compose.yml exec lakehouse-driver spark-submit /opt/lakehouse/jobs/lakehouse_smoke.py
    ```
 
 **Fixed configuration.** `config/lakehouse/spark-defaults.conf` sets memory, cores, the S3 endpoint, event logging to `s3a://logs/spark-events/` and the Iceberg catalog `lake` (warehouse `s3a://warehouse/iceberg`). Do not override any of it in your code: every run's event log records the configuration it ran with. Iceberg's vectorised reader is switched off because it crashes the JVM on ARM machines.

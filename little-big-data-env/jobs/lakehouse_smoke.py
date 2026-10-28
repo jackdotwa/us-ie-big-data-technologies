@@ -1,7 +1,7 @@
 """Lakehouse smoke test: proves the stack can read raw files from S3 and keep Iceberg tables there.
 
     docker compose -f little-big-data-env/docker-compose.yml exec lakehouse-driver \
-        spark-submit little-big-data-env/jobs/lakehouse_smoke.py
+        spark-submit /opt/lakehouse/jobs/lakehouse_smoke.py
 
 Reads raw sales CSV from the landing bucket, writes and reads back an Iceberg table in the
 warehouse bucket, writes Parquet to the output bucket, and leaves an event log in the logs bucket.

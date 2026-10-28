@@ -15,7 +15,9 @@ NETWORK="$(docker inspect seaweedfs -f '{{range $k, $v := .NetworkSettings.Netwo
 
 if [ -f "$TARBALL.sha256" ]; then
   echo "[*] Checking SHA-256"
-  (cd "$(dirname "$TARBALL")" && sha256sum -c "$(basename "$TARBALL").sha256")
+  # sha256sum is GNU coreutils; older macOS has only shasum.
+  SHA256=(sha256sum); command -v sha256sum >/dev/null || SHA256=(shasum -a 256)
+  (cd "$(dirname "$TARBALL")" && "${SHA256[@]}" -c "$(basename "$TARBALL").sha256")
 fi
 
 rm -rf "$TMP" && mkdir -p "$TMP"

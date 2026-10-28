@@ -12,6 +12,9 @@ JARS=(
   "com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar"
 )
 
+# sha1sum is GNU coreutils; older macOS has only shasum.
+SHA1=(sha1sum); command -v sha1sum >/dev/null || SHA1=(shasum -a 1)
+
 mkdir -p "$DIR"
 for path in "${JARS[@]}"; do
   name="$(basename "$path")"
@@ -23,7 +26,7 @@ for path in "${JARS[@]}"; do
     mv "$DIR/$name.part" "$DIR/$name"
   fi
   expected="$(curl -fsSL "$MAVEN/$path.sha1" | cut -c1-40)"
-  actual="$(sha1sum "$DIR/$name" | cut -c1-40)"
+  actual="$("${SHA1[@]}" "$DIR/$name" | cut -c1-40)"
   if [ "$expected" != "$actual" ]; then
     echo "[!] Checksum mismatch for $name (expected $expected, got $actual)"; rm -f "$DIR/$name"; exit 1
   fi

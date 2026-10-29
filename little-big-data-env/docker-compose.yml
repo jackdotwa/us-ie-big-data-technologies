@@ -2,7 +2,7 @@
 #   docker compose --profile analytics up -d    # Spark, Kafka, Kafka UI, Cassandra, Qdrant (the course's lab stack)
 #   docker compose --profile streaming up -d    # Spark, Kafka, Kafka UI and the stream consumer
 #   docker compose --profile spark up -d        # Spark master and worker only
-#   docker compose --profile lakehouse up -d    # S3 object store, Spark with two workers, Iceberg (8 GiB in all)
+#   docker compose --profile lakehouse up -d    # S3 object store, Spark with two workers, Iceberg (9 GiB in all)
 # Naming a service starts it whatever its profile, e.g. `docker compose up -d postgres mongo`.
 
 x-lakehouse-spark: &lakehouse-spark
@@ -135,7 +135,7 @@ services:
     depends_on:
       - kafka
 
-  # ---- lakehouse: S3 object store (SeaweedFS) + Spark with two workers + a driver, 8 GiB in all ----
+  # ---- lakehouse: S3 object store (SeaweedFS) + Spark with two workers + a driver, 9 GiB in all ----
   # The Spark configuration in config/lakehouse/spark-defaults.conf is fixed; every run's event
   # log records the configuration it ran with.
 
@@ -159,11 +159,12 @@ services:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9333/cluster/healthz"]
       interval: 5s
       retries: 30
-    # 1 GiB: at 768 MiB it was OOM-killed streaming an 88 MB event log to several readers at once.
+    # 1.5 GiB: at 768 MiB it was OOM-killed streaming an 88 MB event log to several readers at once,
+    # and at 1 GiB once near the end of a first run on a full dataset (29 Oct).
     deploy:
       resources:
         limits:
-          memory: 1024M
+          memory: 1536M
 
   # Creates the four buckets once the S3 gateway answers, then exits.
   seaweedfs-init:
@@ -196,12 +197,18 @@ services:
     command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker --cores 2 --memory 2g spark://spark-master:7077
     environment:
       - SPARK_DAEMON_MEMORY=256m
+      # glibc keeps a memory arena per thread and rarely returns it; native codecs (Parquet,
+      # compression) then grow the executor's memory towards the container limit. Two arenas keep it bounded.
+      - MALLOC_ARENA_MAX=2
     depends_on:
       - spark-master
+    # 2.75 GiB: the 1.6 GiB executor heap, the worker daemon and the JVMs' off-heap memory. At
+    # 2.5 GiB a worker was OOM-killed on a first run on a full dataset (29 Oct); the executor's
+    # direct memory is capped in config/lakehouse/spark-defaults.conf so it cannot grow to the limit.
     deploy:
       resources:
         limits:
-          memory: 2560M
+          memory: 2816M
 
   lakehouse-worker-2:
     <<: *lakehouse-worker

@@ -31,7 +31,7 @@ docker run --rm --network "$NETWORK" -v "$TMP/landing:/src:ro" \
   -e RCLONE_CONFIG_S3_TYPE=s3 -e RCLONE_CONFIG_S3_PROVIDER=SeaweedFS \
   -e RCLONE_CONFIG_S3_ENDPOINT=http://seaweedfs:8333 \
   -e RCLONE_CONFIG_S3_ACCESS_KEY_ID=bdtadmin -e RCLONE_CONFIG_S3_SECRET_ACCESS_KEY=bdtadmin \
-  rclone/rclone:1.75.2 copy /src s3:landing --transfers 32 --checkers 32 --stats-one-line --stats 30s
+  rclone/rclone:1.75.2 copy /src s3:landing --transfers 8 --checkers 16 --stats-one-line --stats 30s
 docker run --rm --network "$NETWORK" \
   -e RCLONE_CONFIG_S3_TYPE=s3 -e RCLONE_CONFIG_S3_PROVIDER=SeaweedFS \
   -e RCLONE_CONFIG_S3_ENDPOINT=http://seaweedfs:8333 \

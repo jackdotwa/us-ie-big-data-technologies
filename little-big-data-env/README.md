@@ -110,13 +110,13 @@ docker compose --profile <profile> down
 
 ## 6. Lakehouse Stack (S3, Spark, Iceberg)
 
-The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its memory limits add up to 8 GiB, so start it on its own, not alongside `analytics`. Docker Desktop must be allowed at least 10 GB of memory, or the containers cannot use the memory they are allowed: on macOS under Settings → Resources; on Windows with the WSL 2 backend through `memory=10GB` in `%UserProfile%\.wslconfig` (then `wsl --shutdown`). On Linux, Docker uses the machine's memory directly: there is nothing to set, but about 10 GB must be free. Run these commands from the repository root (the folder that contains `little-big-data-env/`), not from inside `little-big-data-env/` as in Section 2.
+The `lakehouse` profile is an S3 object store with Spark and Iceberg on top. Its memory limits add up to 9 GiB, so start it on its own, not alongside `analytics`. Docker Desktop must be allowed at least 10 GB of memory, or the containers cannot use the memory they are allowed: on macOS under Settings → Resources; on Windows with the WSL 2 backend through `memory=10GB` in `%UserProfile%\.wslconfig` (then `wsl --shutdown`). On Linux, Docker uses the machine's memory directly: there is nothing to set, but about 10 GB must be free. Run these commands from the repository root (the folder that contains `little-big-data-env/`), not from inside `little-big-data-env/` as in Section 2.
 
 | Service | Purpose | Memory limit |
 | --- | --- | --- |
-| `seaweedfs` | S3-compatible object store (SeaweedFS), buckets `landing`, `warehouse`, `output`, `logs` | 1 GiB |
+| `seaweedfs` | S3-compatible object store (SeaweedFS), buckets `landing`, `warehouse`, `output`, `logs` | 1.5 GiB |
 | `spark-master` | Spark standalone master (shared with the other profiles), UI on http://localhost:8080 | 512 MiB |
-| `lakehouse-worker-1`, `lakehouse-worker-2` | 2 cores and 2 GiB each: one executor per worker | 2.5 GiB each |
+| `lakehouse-worker-1`, `lakehouse-worker-2` | 2 cores and 2 GiB each: one executor per worker | 2.75 GiB each |
 | `lakehouse-driver` | Where you run `spark-submit`, with your repository (`REPO_DIR`) mounted at `/workspace`; application UI on http://localhost:4041; JupyterLab on http://localhost:8888 when started | 1.5 GiB |
 
 **Where Iceberg sits.** Iceberg is not a service: it is a table format, used through a library inside Spark. The Iceberg Spark runtime jar gives Spark SQL a catalog called `lake`, whose tables live as Parquet data files plus Iceberg metadata (snapshots and manifests) in the `warehouse` bucket. Raw files stay in `landing`; your jobs turn them into tables in `lake`; results go to `output`.

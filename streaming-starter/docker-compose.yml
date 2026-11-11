@@ -1,0 +1,192 @@
+# Streaming starter: Apache Beam (Python 3.10) on Flink 1.19, with Postgres, SeaweedFS (S3),
+# an optional local Kafka and an optional lab. Pinned images, x86-64 and arm64. See README.md.
+#   docker compose --profile stream --profile localkafka build
+#   docker compose --profile stream --profile localkafka up -d
+#   docker compose run --rm topics      # local Kafka only: create the topics
+#   docker compose run --rm submit      # submit $PIPELINE_DIR/pipeline.py to Flink
+# Settings: .env (optional, see .env.example) picks the connection file and your job folder.
+
+x-logging: &logging
+  driver: json-file
+  options: {max-size: "10m", max-file: "3"}
+
+x-flinkenv: &flinkenv
+  FLINK_PROPERTIES: |
+    jobmanager.rpc.address: jobmanager
+    jobmanager.memory.process.size: 1024m
+    taskmanager.memory.process.size: 1280m
+    taskmanager.numberOfTaskSlots: 2
+    parallelism.default: 1
+    state.backend.type: hashmap
+    state.checkpoints.dir: file:///checkpoints
+    state.savepoints.dir: file:///checkpoints/savepoints
+    execution.checkpointing.interval: 30s
+    execution.checkpointing.externalized-checkpoint-retention: RETAIN_ON_CANCELLATION
+    restart-strategy.type: fixed-delay
+    restart-strategy.fixed-delay.attempts: 20
+    restart-strategy.fixed-delay.delay: 10s
+    blob.service.cleanup.interval: 120
+
+# Where your code finds Postgres and the S3 store (inside the compose network).
+x-stackenv: &stackenv
+  PG_DSN: postgresql://app:app@postgres:5432/app
+  S3_ENDPOINT: http://seaweedfs:8333
+  S3_BUCKET: raw
+  AWS_ACCESS_KEY_ID: app
+  AWS_SECRET_ACCESS_KEY: app
+  AWS_DEFAULT_REGION: us-east-1
+
+services:
+  # ---------------- stream: Flink, your job, Postgres, SeaweedFS ----------------
+  jobmanager:
+    image: flink:1.19.3-java11
+    profiles: ["stream"]
+    # the checkpoints volume starts root-owned; Flink runs as user flink
+    entrypoint: ["/bin/sh", "-c", "rm -rf /tmp/jm_* && chown flink:flink /checkpoints && exec /docker-entrypoint.sh jobmanager"]
+    ports: ["127.0.0.1:8081:8081"]
+    environment: *flinkenv
+    volumes: ["checkpoints:/checkpoints"]
+    mem_limit: 1152m
+    logging: *logging
+    restart: unless-stopped
+
+  # TaskManager plus your Python code, in one image: images/beam plus $PIPELINE_DIR/requirements.txt.
+  # Flink starts the Python worker inside this container; if it crashes or runs out of memory, Flink
+  # restarts the job from the last checkpoint. Memory: about 1.25 GiB Flink + up to 1.1 GiB Python.
+  taskmanager:
+    image: streaming-beam:2.77.0-py310
+    build:
+      context: ./images/beam
+      additional_contexts:
+        job: ${PIPELINE_DIR:-.}
+    profiles: ["stream"]
+    # clear the previous run's copies of the job files, which a restart would otherwise keep
+    entrypoint: ["/bin/sh", "-c", "rm -rf /tmp/tm_* && chown flink:flink /checkpoints && exec /docker-entrypoint.sh taskmanager"]
+    depends_on: [jobmanager]
+    env_file: ["${CONNECTION:-connection/local.env}"]
+    environment:
+      <<: [*flinkenv, *stackenv]
+    volumes: ["checkpoints:/checkpoints", "beam-staging:/tmp/beam-artifact-staging"]
+    mem_limit: 2432m
+    logging: *logging
+    restart: unless-stopped
+
+  jobserver:
+    image: apache/beam_flink1.19_job_server:2.77.0
+    profiles: ["stream"]
+    command: ["--flink-master=jobmanager:8081", "--job-host=0.0.0.0"]
+    environment: {JAVA_TOOL_OPTIONS: "-Xmx256m"}
+    depends_on: [jobmanager]
+    volumes: ["beam-staging:/tmp/beam-artifact-staging"]   # the TaskManager serves staged files to the Python worker
+    mem_limit: 768m
+    logging: *logging
+    restart: unless-stopped
+
+  # Java expansion service for ReadFromKafka/WriteToKafka. EMBEDDED: the Kafka code runs inside the
+  # TaskManager JVM. Downloads the 840 MB jar once into a volume.
+  # Only needed while submitting: `docker compose stop expansion` afterwards frees about 0.7 GiB.
+  expansion:
+    image: eclipse-temurin:17-jre
+    profiles: ["stream", "submit"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        J=/jars/beam-sdks-java-io-expansion-service-2.77.0.jar
+        [ -s "$$J" ] || curl -fL -o "$$J.part" https://repo.maven.apache.org/maven2/org/apache/beam/beam-sdks-java-io-expansion-service/2.77.0/beam-sdks-java-io-expansion-service-2.77.0.jar && mv -f "$$J.part" "$$J" 2>/dev/null
+        exec java -Xmx384m -XX:MaxDirectMemorySize=1g -jar "$$J" 8097 --javaClassLookupAllowlistFile='*' \
+             --defaultEnvironmentType=EMBEDDED --filesToStage="$$J"
+    volumes: ["beam-jars:/jars"]
+    mem_limit: 2g   # serving the jar to the client needs about 1 GiB of direct memory
+    logging: *logging
+
+  postgres:
+    image: postgres:16.4
+    profiles: ["stream", "lab"]
+    environment: {POSTGRES_USER: app, POSTGRES_PASSWORD: app, POSTGRES_DB: app}
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=50"]
+    mem_limit: 512m
+    logging: *logging
+    restart: unless-stopped
+
+  # S3-compatible object store: endpoint http://seaweedfs:8333 (from the host: localhost:8333)
+  seaweedfs:
+    image: chrislusf/seaweedfs:3.80
+    profiles: ["stream", "lab"]
+    command: ["server", "-dir=/data", "-s3", "-s3.port=8333", "-master.volumeSizeLimitMB=256", "-volume.max=0"]
+    ports: ["127.0.0.1:8333:8333"]
+    volumes: ["seaweed:/data"]
+    mem_limit: 512m
+    logging: *logging
+    restart: unless-stopped
+
+  # Submits $PIPELINE_DIR/pipeline.py to Flink. Shares the expansion service's network (Beam's Python
+  # client only talks to an expansion service on a loopback address).
+  # Extra arguments are passed on: docker compose run --rm submit --savepoint_path=...
+  submit:
+    image: streaming-beam:2.77.0-py310
+    profiles: ["submit"]
+    network_mode: "service:expansion"
+    working_dir: /app
+    env_file: ["${CONNECTION:-connection/local.env}"]
+    environment: *stackenv
+    volumes: ["${PIPELINE_DIR:-.}:/app", "beam-staging:/staging"]
+    # Each submit stages the 840 MB Kafka jar again, so clear the previous job's copy first.
+    # It waits for the expansion service, which takes about 20 s to start.
+    entrypoint: ["/bin/sh", "-c", "rm -rf /staging/*; until python -c \"import socket; socket.create_connection(('localhost', 8097), 1)\" 2>/dev/null; do echo waiting for the expansion service; sleep 3; done; exec python pipeline.py \"$$@\"", "submit",
+                 "--runner=PortableRunner", "--job_endpoint=jobserver:8099", "--artifact_endpoint=jobserver:8098",
+                 "--environment_type=PROCESS", "--environment_config={\"command\": \"/opt/apache/beam/boot\"}",
+                 "--streaming", "--checkpointing_interval=30000"]
+
+  # Creates the topics named in the connection file (local Kafka).
+  topics:
+    image: streaming-beam:2.77.0-py310
+    profiles: ["tools"]
+    env_file: ["${CONNECTION:-connection/local.env}"]
+    volumes: ["./scripts:/scripts:ro"]
+    entrypoint: ["python", "/scripts/create_topics.py"]
+
+  # ---------------- localkafka: a single-node Kafka for local testing ----------------
+  kafka:
+    image: apache/kafka-native:3.9.1
+    hostname: kafka
+    profiles: ["localkafka"]
+    ports: ["127.0.0.1:9092:9092"]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: HOST://:9092,CONTROLLER://:9093,DOCKER://:19092
+      KAFKA_ADVERTISED_LISTENERS: HOST://localhost:9092,DOCKER://kafka:19092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: HOST:PLAINTEXT,CONTROLLER:PLAINTEXT,DOCKER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_RETENTION_HOURS: 192
+    mem_limit: 512m
+    logging: *logging
+    restart: unless-stopped
+
+  # ---------------- lab: JupyterLab, DuckDB, Spark batch ----------------
+  lab:
+    image: streaming-lab:py310
+    build: ./images/lab
+    profiles: ["lab"]
+    ports: ["127.0.0.1:8888:8888"]
+    env_file: ["${CONNECTION:-connection/local.env}"]
+    environment: *stackenv
+    volumes: ["${LAB_DIR:-.}:/work"]
+    mem_limit: 2g
+    logging: *logging
+
+volumes:
+  checkpoints: {}
+  beam-jars: {}
+  beam-staging: {}
+  pgdata: {}
+  seaweed: {}
+
+networks:
+  default:
+    name: streaming

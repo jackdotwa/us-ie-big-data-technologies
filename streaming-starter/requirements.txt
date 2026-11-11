@@ -1,0 +1,6 @@
+# Python libraries for your Beam job. It runs on the Flink TaskManager's Python worker.
+# Add what your job needs, then: docker compose --profile stream build && docker compose --profile stream up -d
+psycopg[binary]==3.2.3
+boto3==1.35.54
+numpy==1.26.4
+pandas==2.2.3

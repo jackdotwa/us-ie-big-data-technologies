@@ -19,7 +19,7 @@ docker compose stop expansion                                # once the job is R
 ```
 
 - Flink UI: http://localhost:8081. The first start downloads the Kafka jar (840 MB) into a volume, so the first submit can take a few minutes.
-- `pipeline.py` is a stack check, not a real job. It reads two topics, counts records per minute, and writes each count to Postgres (table `stackcheck`) and SeaweedFS (`s3://raw/stackcheck/`). If `docker compose logs taskmanager | grep STACKCHECK` shows lines, the stack works end to end. Records must arrive on the topics for counts to appear.
+- `pipeline.py` is a stack check, not a real job. It reads two topics, counts records per minute, and writes each count to Postgres (table `stackcheck`) and SeaweedFS (`s3://raw/stackcheck/`). If `docker compose logs taskmanager | grep STACKCHECK` shows lines, the stack works end to end. Records must arrive on the topics for counts to appear. After a restart, a count can be written twice.
 - The lab: `docker compose --profile lab build`, then `docker compose --profile lab up -d`, and open http://localhost:8888 (token `lab`). It sees the same Postgres and S3 store.
 - All ports listen on localhost only.
 

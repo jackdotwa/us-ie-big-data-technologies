@@ -13,7 +13,8 @@ from apache_beam.transforms import window
 def kafka_config():
     """Consumer settings from the connection file (see connection/)."""
     cfg = {"bootstrap.servers": os.environ["KAFKA_BOOTSTRAP"],
-           "group.id": os.environ["CONSUMER_GROUP"], "auto.offset.reset": "earliest"}
+           "group.id": os.environ["CONSUMER_GROUP"], "auto.offset.reset": "earliest",
+           "enable.auto.commit": "false"}
     if os.environ.get("KAFKA_USERNAME"):
         cfg.update({
             "security.protocol": os.environ.get("KAFKA_SECURITY_PROTOCOL", "SASL_SSL"),

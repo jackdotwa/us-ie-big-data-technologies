@@ -3,7 +3,7 @@ Reads both topics, counts records per topic per 1-minute window (by Kafka record
 each count to Postgres (table stackcheck) and to SeaweedFS (s3://$S3_BUCKET/stackcheck/...).
 Look for STACKCHECK lines in: docker compose logs -f taskmanager
 Replace it with your own job, and keep reading every setting from the environment."""
-import json, logging, os, time
+import json, logging, os, time, uuid
 import apache_beam as beam
 from apache_beam.io.kafka import ReadFromKafka
 from apache_beam.options.pipeline_options import PipelineOptions
@@ -47,8 +47,7 @@ class WriteCount(beam.DoFn):
         import boto3, psycopg
         self.pg = psycopg.connect(os.environ["PG_DSN"], autocommit=True)
         self.pg.execute("CREATE TABLE IF NOT EXISTS stackcheck (topic text, window_end timestamptz, n int, "
-                        "code_version text, written_at timestamptz DEFAULT now(), "
-                        "PRIMARY KEY (topic, window_end))")
+                        "code_version text, written_at timestamptz DEFAULT now())")
         self.s3 = boto3.client("s3", endpoint_url=os.environ["S3_ENDPOINT"])
         try:
             self.s3.create_bucket(Bucket=os.environ["S3_BUCKET"])
@@ -57,11 +56,9 @@ class WriteCount(beam.DoFn):
 
     def process(self, n, w=beam.DoFn.WindowParam):
         end = w.end.to_utc_datetime()
-        self.pg.execute("INSERT INTO stackcheck (topic, window_end, n, code_version) VALUES (%s, %s, %s, %s) "
-                        "ON CONFLICT (topic, window_end) DO UPDATE SET n = EXCLUDED.n, "
-                        "code_version = EXCLUDED.code_version, written_at = now()",
+        self.pg.execute("INSERT INTO stackcheck (topic, window_end, n, code_version) VALUES (%s, %s, %s, %s)",
                         (self.topic, end, n, self.code_version))
-        key = f"stackcheck/{self.topic}/{end:%Y%m%dT%H%M}.json"
+        key = f"stackcheck/{self.topic}/{end:%Y%m%dT%H%M}-{uuid.uuid4().hex[:8]}.json"
         body = json.dumps({"n": n, "code_version": self.code_version}).encode()
         self.s3.put_object(Bucket=os.environ["S3_BUCKET"], Key=key, Body=body)
         logging.warning("STACKCHECK %s %d records/min code_version=%s -> postgres + s3://%s/%s",
